@@ -56,15 +56,14 @@ jobs:
       - name: Create Tag
         uses: mathieudutour/github-tag-action@v6.1
         with:
-          github_token: ${{ secrets.GH_ACCESS_TOKEN }}
+          github_token: ${{ github.token }}
           custom_tag: "${{ steps.extract_version.outputs.tag }}"
           tag_prefix: ""
-      
+
       - name: Create Draft Release
         uses: ncipollo/release-action@v1
         with:
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          token: ${{ github.token }}
           tag: "${{ steps.extract_version.outputs.tag }}"
           prerelease: "${{ steps.extract_version.outputs.beta }}"
-          draft: "true"
           generateReleaseNotes: true

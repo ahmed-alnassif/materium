@@ -60,10 +60,11 @@ jobs:
           custom_tag: "${{ steps.extract_version.outputs.tag }}"
           tag_prefix: ""
 
-      - name: Create Draft Release
+      - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           token: ${{ github.token }}
           tag: "${{ steps.extract_version.outputs.tag }}"
           prerelease: "${{ steps.extract_version.outputs.beta }}"
           generateReleaseNotes: true
+          artifacts: build/app/outputs/flutter-apk/*

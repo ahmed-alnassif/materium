@@ -18,10 +18,6 @@ import 'package:materium/providers/settings_new.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-// ignore: implementation_imports
-import 'package:material/src/material_shapes/material_shapes.dart'
-    show RoundedPolygonInternalExtension;
-
 import 'package:syntax_highlight/syntax_highlight.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -2453,7 +2449,7 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                             clipBehavior: Clip.antiAlias,
                             shape: RoundedPolygonBorder(
                               polygon: MaterialShapes.cookie12Sided
-                                  .transformedWithMatrix(_rotationMatrix),
+                                  .transformedWithMatrix4(_rotationMatrix),
                             ),
                             color: colorTheme.surface,
                             child: child!,

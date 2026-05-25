@@ -1,9 +1,6 @@
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:materium/flutter.dart';
 
-// ignore: implementation_imports
-import 'package:material/src/material_shapes/material_shapes.dart';
-
 enum CustomCheckboxColor { standard, listItemPhone, listItemWatch, black }
 
 enum CustomRadioButtonColor { standard, listItemPhone, listItemWatch, black }

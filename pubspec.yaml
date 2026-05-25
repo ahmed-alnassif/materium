@@ -9,8 +9,8 @@ publish_to: none
 workspace: []
 
 environment:
-  sdk: ^3.11.0
-  flutter: ">=3.41.0"
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
 
 dependencies:
   # SDK dependencies
@@ -23,12 +23,12 @@ dependencies:
   layout:
     git:
       url: https://github.com/deminearchiver/dart-flutter-packages.git
-      ref: 7892fcb58e9926230620893189509f98b2815656
+      ref: 95122cf1d88b30e5e1eee9d7d025c415907047a9
       path: packages/layout
   material:
     git:
       url: https://github.com/deminearchiver/dart-flutter-packages.git
-      ref: 7892fcb58e9926230620893189509f98b2815656
+      ref: 95122cf1d88b30e5e1eee9d7d025c415907047a9
       path: packages/material
   android_package_installer: # TODO: See if PR will be accepted (dev may not be active), else remove this comment
     git:
@@ -59,10 +59,10 @@ dependencies:
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
   permission_handler: ^12.0.1
-  fluttertoast: ^9.0.0
+  fluttertoast: ^9.1.0
   file_picker: ^11.0.2
   share_plus: ^12.0.2
-  sqflite: ^2.4.2
+  sqflite: ^2.4.2+1
   easy_localization: ^3.0.8
   android_intent_plus: ^6.0.0
   flutter_archive: ^6.0.4
@@ -71,7 +71,7 @@ dependencies:
   crypto: ^3.0.7
   bcrypt: ^1.2.0
   app_links: ^7.0.0
-  background_fetch: ^1.6.2
+  background_fetch: ^1.7.0
   flex_color_picker: ^3.8.0
   markdown: ^7.3.1
   flutter_typeahead: ^6.0.0
@@ -83,12 +83,12 @@ dependencies:
   super_keyboard: ^0.4.0
   super_editor: ^0.3.0-dev.51
   freezed_annotation: ^3.1.0
-  json_annotation: ^4.11.0
-  flutter_svg: ^2.2.4
-  vector_graphics: ^1.1.21
+  json_annotation: ^4.12.0
+  flutter_svg: ^2.3.0
+  vector_graphics: ^1.2.2
   collection: ^1.19.1
   syntax_highlight: ^0.5.0
-  drift: ^2.32.1
+  drift: ^2.33.0
   drift_flutter: ^0.3.0
   drift_sqflite: ^2.0.1
   talker_flutter: ^5.1.16
@@ -103,11 +103,11 @@ dependencies:
 dev_dependencies:
   # Hosted dependencies
   deminearchiver_lints: ^2.1.2
-  build_runner: ^2.13.1
-  json_serializable: ^6.13.1
+  build_runner: ^2.15.0
+  json_serializable: ^6.14.0
   freezed: ^3.2.5
-  flutter_gen_runner: ^5.14.0
-  drift_dev: ^2.32.1
+  flutter_gen_runner: ^5.14.1
+  drift_dev: ^2.33.0
   slang_build_runner: ^4.14.0
   fastforge: ^0.6.6
 

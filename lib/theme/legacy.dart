@@ -204,11 +204,13 @@ abstract final class LegacyThemeFactory {
       pageTransitionsTheme: PageTransitionsTheme(
         builders: {
           for (final value in TargetPlatform.values)
-            value: switch (value) {
-              _ => FadeForwardsPageTransitionsBuilder(
-                backgroundColor: scaffoldBackgroundColor,
-              ),
-            },
+            value: FadeForwardsPageTransitionsBuilder(
+              backgroundColor: scaffoldBackgroundColor,
+            ),
+          // TODO: https://github.com/flutter/flutter/issues/153577
+          .android: PredictiveBackPageTransitionsBuilder(
+            fallbackColor: scaffoldBackgroundColor,
+          ),
         },
       ),
     );

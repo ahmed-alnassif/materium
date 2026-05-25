@@ -86,7 +86,7 @@ Future<void> loadTranslations() async {
 }
 
 @pragma("vm:entry-point")
-void backgroundFetchHeadlessTask(HeadlessTask task) async {
+void backgroundFetchHeadlessTask(HeadlessEvent task) async {
   final taskId = task.taskId;
   final isTimeout = task.timeout;
   if (isTimeout) {

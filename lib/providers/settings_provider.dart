@@ -11,7 +11,6 @@ import 'package:materium/main.dart';
 import 'package:materium/providers/apps_provider.dart';
 import 'package:materium/providers/source_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences/util/legacy_to_async_migration_util.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;

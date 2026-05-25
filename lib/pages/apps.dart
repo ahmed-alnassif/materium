@@ -1727,7 +1727,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
                                   );
                                 },
                               ),
-                              Material.raw(
+                              Surface.raw(
                                 child: InkWell(
                                   overlayColor: WidgetStateLayerColor(
                                     color: WidgetStatePropertyAll(

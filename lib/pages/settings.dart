@@ -68,7 +68,7 @@ class CustomListItemLeading extends StatelessWidget {
       width: 40.0,
       height: !shrinkWrapHeight ? 40.0 : null,
       child: Skeleton.leaf(
-        child: Material.raw(
+        child: Surface.raw(
           clipBehavior: .antiAlias,
           borderOnForeground: false,
           shape:

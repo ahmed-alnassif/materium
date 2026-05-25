@@ -15,7 +15,6 @@ import 'package:materium/providers/settings_new.dart';
 import 'package:materium/providers/settings_provider.dart';
 import 'package:materium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:super_keyboard/super_keyboard.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class AddAppPage extends StatefulWidget {
@@ -913,242 +912,241 @@ class AddAppPageState extends State<AddAppPage> {
 
     final padding = MediaQuery.paddingOf(context);
 
-    return SuperKeyboardBuilder(
-      builder: (context, mobileGeometry) {
-        // debugPrint(
-        //   "${mobileGeometry.bottomPadding} ${mobileGeometry.keyboardHeight}",
-        // );
-        return Scaffold(
-          resizeToAvoidBottomInset: false,
-          backgroundColor: backgroundColor,
-          // bottomNavigationBar: pickedSource == null
-          //     ? Padding(
-          //         padding: .fromLTRB(
-          //           padding.left,
-          //           0.0,
-          //           padding.right,
-          //           padding.bottom,
-          //         ),
-          //         child: getSourcesListWidget(),
-          //       )
-          //     : null,
-          body: SafeArea(
-            top: false,
-            bottom: false,
-            child: SwitchTheme.merge(
-              data: CustomThemeFactory.createSwitchTheme(
-                colorTheme: colorTheme,
-                shapeTheme: shapeTheme,
-                stateTheme: stateTheme,
-                size: useBlackTheme ? .black : .standard,
-                color: useBlackTheme ? .black : .standard,
+    // return SuperKeyboardBuilder(
+    //   builder: (context, mobileGeometry) {
+    //     // debugPrint(
+    //     //   "${mobileGeometry.bottomPadding} ${mobileGeometry.keyboardHeight}",
+    //     // );
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: backgroundColor,
+      // bottomNavigationBar: pickedSource == null
+      //     ? Padding(
+      //         padding: .fromLTRB(
+      //           padding.left,
+      //           0.0,
+      //           padding.right,
+      //           padding.bottom,
+      //         ),
+      //         child: getSourcesListWidget(),
+      //       )
+      //     : null,
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: SwitchTheme.mergeWithData(
+          data: CustomThemeFactory.createSwitchTheme(
+            colorTheme: colorTheme,
+            shapeTheme: shapeTheme,
+            stateTheme: stateTheme,
+            size: useBlackTheme ? .black : .standard,
+            color: useBlackTheme ? .black : .standard,
+          ),
+          child: CustomScrollView(
+            slivers: <Widget>[
+              CustomAppBar(
+                type: showBackButton ? .small : .largeFlexible,
+                expandedContainerColor: backgroundColor,
+                collapsedContainerColor: backgroundColor,
+                collapsedPadding: showBackButton
+                    ? const .fromSTEB(8.0 + 40.0 + 8.0, 0.0, 16.0, 0.0)
+                    : null,
+                leading: showBackButton
+                    ? const Padding(
+                        padding: .fromSTEB(8.0 - 4.0, 0.0, 8.0 - 4.0, 0.0),
+                        child: DeveloperPageBackButton(),
+                      )
+                    : null,
+                title: Text(
+                  tr("addApp"),
+                  textAlign: !showBackButton ? .center : .start,
+                ),
+                trailing: Padding(
+                  padding: const .fromSTEB(8.0 - 4.0, 0.0, 8.0 - 4.0, 0.0),
+                  child: Flex.horizontal(
+                    children: [
+                      Tooltip(
+                        message: tr("supportedSources"),
+                        child: IconButton(
+                          style: .from(
+                            containerColor: .resolveWith(
+                              (states) => switch (states) {
+                                ButtonDisabledStates() => null,
+                                _ =>
+                                  useBlackTheme
+                                      ? colorTheme.surfaceContainer
+                                      : Colors.transparent,
+                              },
+                            ),
+                            iconTheme: .resolveWith(
+                              (states) => .from(
+                                color: switch (states) {
+                                  ButtonDisabledStates() => null,
+                                  _ =>
+                                    useBlackTheme
+                                        ? colorTheme.primary
+                                        : colorTheme.onSurfaceVariant,
+                                },
+                              ),
+                            ),
+                          ),
+                          settings: const .new(
+                            size: .small,
+                            shape: .round,
+                            color: .standard,
+                            width: .normal,
+                          ),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return GeneratedFormModal(
+                                  singleNullReturnButton: tr('ok'),
+                                  title: tr('supportedSources'),
+                                  items: const [],
+                                  additionalWidgets: [
+                                    ...sourceProvider.sources.map(
+                                      (e) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: e.hosts.isNotEmpty
+                                              ? () {
+                                                  launchUrlString(
+                                                    'https://${e.hosts[0]}',
+                                                    mode: LaunchMode
+                                                        .externalApplication,
+                                                  );
+                                                }
+                                              : null,
+                                          child: Text(
+                                            '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
+                                            style: TextStyle(
+                                              decoration: e.hosts.isNotEmpty
+                                                  ? TextDecoration.underline
+                                                  : TextDecoration.none,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      '${tr('note')}:',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      tr(
+                                        'selfHostedNote',
+                                        args: [tr('overrideSource')],
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: const Icon(Symbols.list_alt_rounded),
+                        ),
+                      ),
+                      Tooltip(
+                        message: tr("crowdsourcedConfigsShort"),
+                        child: IconButton(
+                          style: .from(
+                            containerColor: .resolveWith(
+                              (states) => switch (states) {
+                                ButtonDisabledStates() => null,
+                                _ =>
+                                  useBlackTheme
+                                      ? colorTheme.surfaceContainer
+                                      : Colors.transparent,
+                              },
+                            ),
+                            iconTheme: .resolveWith(
+                              (states) => .from(
+                                color: switch (states) {
+                                  ButtonDisabledStates() => null,
+                                  _ =>
+                                    useBlackTheme
+                                        ? colorTheme.primary
+                                        : colorTheme.onSurfaceVariant,
+                                },
+                              ),
+                            ),
+                          ),
+                          settings: const .new(
+                            size: .small,
+                            shape: .round,
+                            color: .standard,
+                            width: .normal,
+                          ),
+                          onTap: () {
+                            launchUrlString(
+                              "https://apps.obtainium.imranr.dev/",
+                              mode: .externalApplication,
+                            );
+                          },
+                          icon: const Icon(
+                            Symbols.crowdsource_rounded,
+                            fill: 0.0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              child: CustomScrollView(
-                slivers: <Widget>[
-                  CustomAppBar(
-                    type: showBackButton ? .small : .largeFlexible,
-                    expandedContainerColor: backgroundColor,
-                    collapsedContainerColor: backgroundColor,
-                    collapsedPadding: showBackButton
-                        ? const .fromSTEB(8.0 + 40.0 + 8.0, 0.0, 16.0, 0.0)
-                        : null,
-                    leading: showBackButton
-                        ? const Padding(
-                            padding: .fromSTEB(8.0 - 4.0, 0.0, 8.0 - 4.0, 0.0),
-                            child: DeveloperPageBackButton(),
-                          )
-                        : null,
-                    title: Text(
-                      tr("addApp"),
-                      textAlign: !showBackButton ? .center : .start,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const .fromLTRB(8.0, 0.0, 8.0, 8.0),
+                  child: Material(
+                    clipBehavior: .antiAlias,
+                    shape: shapeTheme.applyCorner(
+                      corner: shapeTheme.cornerLarge,
                     ),
-                    trailing: Padding(
-                      padding: const .fromSTEB(8.0 - 4.0, 0.0, 8.0 - 4.0, 0.0),
-                      child: Flex.horizontal(
+                    color: colorTheme.surface,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Flex.vertical(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Tooltip(
-                            message: tr("supportedSources"),
-                            child: IconButton(
-                              style: .from(
-                                containerColor: .resolveWith(
-                                  (states) => switch (states) {
-                                    ButtonDisabledStates() => null,
-                                    _ =>
-                                      useBlackTheme
-                                          ? colorTheme.surfaceContainer
-                                          : Colors.transparent,
-                                  },
-                                ),
-                                iconTheme: .resolveWith(
-                                  (states) => .from(
-                                    color: switch (states) {
-                                      ButtonDisabledStates() => null,
-                                      _ =>
-                                        useBlackTheme
-                                            ? colorTheme.primary
-                                            : colorTheme.onSurfaceVariant,
-                                    },
-                                  ),
-                                ),
-                              ),
-                              settings: const .new(
-                                size: .small,
-                                shape: .round,
-                                color: .standard,
-                                width: .normal,
-                              ),
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return GeneratedFormModal(
-                                      singleNullReturnButton: tr('ok'),
-                                      title: tr('supportedSources'),
-                                      items: const [],
-                                      additionalWidgets: [
-                                        ...sourceProvider.sources.map(
-                                          (e) => Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 4,
-                                            ),
-                                            child: GestureDetector(
-                                              onTap: e.hosts.isNotEmpty
-                                                  ? () {
-                                                      launchUrlString(
-                                                        'https://${e.hosts[0]}',
-                                                        mode: LaunchMode
-                                                            .externalApplication,
-                                                      );
-                                                    }
-                                                  : null,
-                                              child: Text(
-                                                '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
-                                                style: TextStyle(
-                                                  decoration: e.hosts.isNotEmpty
-                                                      ? TextDecoration.underline
-                                                      : TextDecoration.none,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          '${tr('note')}:',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          tr(
-                                            'selfHostedNote',
-                                            args: [tr('overrideSource')],
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
+                          getUrlInputRow(),
+                          const SizedBox(height: 16),
+                          if (pickedSource != null)
+                            getHTMLSourceOverrideDropdown(),
+                          if (shouldShowSearchBar()) getSearchBarRow(),
+                          if (pickedSource != null)
+                            FutureBuilder(
+                              builder: (ctx, val) {
+                                return val.data != null && val.data!.isNotEmpty
+                                    ? Text(
+                                        val.data!,
+                                        style: typescaleTheme.bodySmall
+                                            .toTextStyle(),
+                                      )
+                                    : const SizedBox();
                               },
-                              icon: const Icon(Symbols.list_alt_rounded),
+                              future: pickedSource?.getSourceNote(),
                             ),
-                          ),
-                          Tooltip(
-                            message: tr("crowdsourcedConfigsShort"),
-                            child: IconButton(
-                              style: .from(
-                                containerColor: .resolveWith(
-                                  (states) => switch (states) {
-                                    ButtonDisabledStates() => null,
-                                    _ =>
-                                      useBlackTheme
-                                          ? colorTheme.surfaceContainer
-                                          : Colors.transparent,
-                                  },
-                                ),
-                                iconTheme: .resolveWith(
-                                  (states) => .from(
-                                    color: switch (states) {
-                                      ButtonDisabledStates() => null,
-                                      _ =>
-                                        useBlackTheme
-                                            ? colorTheme.primary
-                                            : colorTheme.onSurfaceVariant,
-                                    },
-                                  ),
-                                ),
-                              ),
-                              settings: const .new(
-                                size: .small,
-                                shape: .round,
-                                color: .standard,
-                                width: .normal,
-                              ),
-                              onTap: () {
-                                launchUrlString(
-                                  "https://apps.obtainium.imranr.dev/",
-                                  mode: .externalApplication,
-                                );
-                              },
-                              icon: const Icon(
-                                Symbols.crowdsource_rounded,
-                                fill: 0.0,
-                              ),
-                            ),
-                          ),
+                          if (pickedSource != null) getAdditionalOptsCol(),
                         ],
                       ),
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const .fromLTRB(8.0, 0.0, 8.0, 8.0),
-                      child: Material(
-                        clipBehavior: .antiAlias,
-                        shape: CornersBorder.rounded(
-                          corners: .all(shapeTheme.corner.large),
-                        ),
-                        color: colorTheme.surface,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Flex.vertical(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              getUrlInputRow(),
-                              const SizedBox(height: 16),
-                              if (pickedSource != null)
-                                getHTMLSourceOverrideDropdown(),
-                              if (shouldShowSearchBar()) getSearchBarRow(),
-                              if (pickedSource != null)
-                                FutureBuilder(
-                                  builder: (ctx, val) {
-                                    return val.data != null &&
-                                            val.data!.isNotEmpty
-                                        ? Text(
-                                            val.data!,
-                                            style: typescaleTheme.bodySmall
-                                                .toTextStyle(),
-                                          )
-                                        : const SizedBox();
-                                  },
-                                  future: pickedSource?.getSourceNote(),
-                                ),
-                              if (pickedSource != null) getAdditionalOptsCol(),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
-                ],
+                ),
               ),
-            ),
+              SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
+    //   },
+    // );
   }
 }

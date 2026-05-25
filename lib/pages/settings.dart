@@ -73,7 +73,7 @@ class CustomListItemLeading extends StatelessWidget {
           borderOnForeground: false,
           shape:
               containerShape ??
-              CornersBorder.rounded(corners: .all(shapeTheme.corner.full)),
+              shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
           color: containerColor ?? Colors.transparent,
           child: DefaultTextStyle.merge(
             textAlign: .center,
@@ -81,7 +81,7 @@ class CustomListItemLeading extends StatelessWidget {
             softWrap: false,
             overflow: .visible,
             style: TextStyle(color: contentColor),
-            child: IconTheme.merge(
+            child: IconTheme.mergeWithData(
               data: .from(opticalSize: 24.0, size: 24.0, color: contentColor),
               child: Align.center(child: child),
             ),
@@ -343,12 +343,12 @@ class _SettingsPageState extends State<SettingsPage> {
     });
 
     final unselectedContainerOuterCorner = useBlackTheme
-        ? shapeTheme.corner.medium
-        : shapeTheme.corner.large;
+        ? shapeTheme.cornerMedium
+        : shapeTheme.cornerLarge;
     final selectedContainerOuterCorner = useBlackTheme
-        ? shapeTheme.corner.largeIncreased
-        : shapeTheme.corner.large;
-    final containerInnerCorner = shapeTheme.corner.extraSmall;
+        ? shapeTheme.cornerLargeIncreased
+        : shapeTheme.cornerLarge;
+    final containerInnerCorner = shapeTheme.cornerExtraSmall;
 
     final disabledContainerColor = colorTheme.onSurface.withValues(alpha: 0.10);
     final disabledContentColor = colorTheme.onSurface.withValues(alpha: 0.38);
@@ -377,8 +377,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final selectedListItemTheme = ListItemThemeDataPartial.from(
       containerColor: .all(selectedContainerColor),
       containerShape: .all(
-        CornersBorder.rounded(
-          corners: .all(selectedContainerOuterCorner),
+        shapeTheme.applyCorner(
+          corner: selectedContainerOuterCorner,
           // side: useBlackTheme
           //     ? BorderSide(width: 2.0, color: colorTheme.onPrimaryContainer)
           //     : .none,
@@ -427,7 +427,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           _ => .all(containerInnerCorner),
         };
-        return CornersBorder.rounded(corners: corners);
+        return shapeTheme.applyCorners(corners: corners);
       }),
       leadingIconTheme: .all(
         .from(
@@ -484,7 +484,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 : useBlackTheme
                 ? colorTheme.primaryContainer
                 : colorTheme.secondaryContainer;
-            return ListItemTheme.merge(
+            return ListItemTheme.withData(
               data: isSelected
                   ? selectedListItemTheme
                   : unselectedListItemTheme,
@@ -539,7 +539,7 @@ class _SettingsPageState extends State<SettingsPage> {
       key: const ValueKey("useFGService"),
       child: Selector<SettingsProvider, bool>(
         selector: (context, settingsProvider) => settingsProvider.useFGService,
-        builder: (context, useFGService, _) => ListItemTheme.merge(
+        builder: (context, useFGService, _) => ListItemTheme.withData(
           data: useFGService ? selectedListItemTheme : unselectedListItemTheme,
           child: ListItemContainer(
             child: MergeSemantics(
@@ -571,54 +571,55 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Selector<SettingsProvider, bool>(
         selector: (context, settingsProvider) =>
             settingsProvider.enableBackgroundUpdates,
-        builder: (context, enableBackgroundUpdates, _) => ListItemTheme.merge(
-          data: enableBackgroundUpdates
-              ? selectedListItemTheme
-              : unselectedListItemTheme,
-          child: ListItemContainer(
-            child: Flex.vertical(
-              crossAxisAlignment: .start,
-              children: [
-                MergeSemantics(
-                  child: ListItemInteraction(
-                    onTap: () => _settingsProvider.enableBackgroundUpdates =
-                        !enableBackgroundUpdates,
-                    child: ListItemLayout(
-                      padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                      trailingPadding: const .symmetric(
-                        vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                      ),
-                      headline: Text(tr("enableBackgroundUpdates")),
-                      trailing: ExcludeFocus(
-                        child: Switch(
-                          onCheckedChanged: (value) =>
-                              _settingsProvider.enableBackgroundUpdates = value,
-                          checked: enableBackgroundUpdates,
+        builder: (context, enableBackgroundUpdates, _) =>
+            ListItemTheme.withData(
+              data: enableBackgroundUpdates
+                  ? selectedListItemTheme
+                  : unselectedListItemTheme,
+              child: ListItemContainer(
+                child: Flex.vertical(
+                  crossAxisAlignment: .start,
+                  children: [
+                    MergeSemantics(
+                      child: ListItemInteraction(
+                        onTap: () => _settingsProvider.enableBackgroundUpdates =
+                            !enableBackgroundUpdates,
+                        child: ListItemLayout(
+                          padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                          trailingPadding: const .symmetric(
+                            vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                          ),
+                          headline: Text(tr("enableBackgroundUpdates")),
+                          trailing: ExcludeFocus(
+                            child: Switch(
+                              onCheckedChanged: (value) =>
+                                  _settingsProvider.enableBackgroundUpdates =
+                                      value,
+                              checked: enableBackgroundUpdates,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
-                  child: DefaultTextStyle(
-                    style: TypescaleTheme.of(context).bodyMedium.toTextStyle(
-                      color: colorTheme.onSurfaceVariant,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
+                      child: DefaultTextStyle(
+                        style: TypescaleTheme.of(context).bodyMedium
+                            .toTextStyle(color: colorTheme.onSurfaceVariant),
+                        child: Flex.vertical(
+                          crossAxisAlignment: .start,
+                          spacing: 8.0,
+                          children: [
+                            Text(tr('backgroundUpdateReqsExplanation')),
+                            Text(tr('backgroundUpdateLimitsExplanation')),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Flex.vertical(
-                      crossAxisAlignment: .start,
-                      spacing: 8.0,
-                      children: [
-                        Text(tr('backgroundUpdateReqsExplanation')),
-                        Text(tr('backgroundUpdateLimitsExplanation')),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
       ),
     );
 
@@ -627,7 +628,7 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Selector<SettingsProvider, bool>(
         selector: (context, settingsProvider) =>
             settingsProvider.bgUpdatesOnWiFiOnly,
-        builder: (context, bgUpdatesOnWiFiOnly, _) => ListItemTheme.merge(
+        builder: (context, bgUpdatesOnWiFiOnly, _) => ListItemTheme.withData(
           data: bgUpdatesOnWiFiOnly
               ? selectedListItemTheme
               : unselectedListItemTheme,
@@ -663,7 +664,7 @@ class _SettingsPageState extends State<SettingsPage> {
         selector: (context, settingsProvider) =>
             settingsProvider.bgUpdatesWhileChargingOnly,
         builder: (context, bgUpdatesWhileChargingOnly, _) =>
-            ListItemTheme.merge(
+            ListItemTheme.withData(
               data: bgUpdatesWhileChargingOnly
                   ? selectedListItemTheme
                   : unselectedListItemTheme,
@@ -747,7 +748,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Selector<SettingsProvider, bool>(
               selector: (context, settingsProvider) =>
                   settingsProvider.checkOnStart,
-              builder: (context, checkOnStart, _) => ListItemTheme.merge(
+              builder: (context, checkOnStart, _) => ListItemTheme.withData(
                 data: checkOnStart
                     ? selectedListItemTheme
                     : unselectedListItemTheme,
@@ -783,7 +784,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.checkUpdateOnDetailPage,
               builder: (context, checkUpdateOnDetailPage, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.withData(
                     data: checkUpdateOnDetailPage
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -826,7 +827,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
               builder: (context, onlyCheckInstalledOrTrackOnlyApps, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.withData(
                     data: onlyCheckInstalledOrTrackOnlyApps
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -873,7 +874,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.removeOnExternalUninstall,
               builder: (context, removeOnExternalUninstall, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.withData(
                     data: removeOnExternalUninstall
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -908,33 +909,39 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Selector<SettingsProvider, bool>(
               selector: (context, settingsProvider) =>
                   settingsProvider.parallelDownloads,
-              builder: (context, parallelDownloads, _) => ListItemTheme.merge(
-                data: parallelDownloads
-                    ? selectedListItemTheme
-                    : unselectedListItemTheme,
-                child: ListItemContainer(
-                  child: MergeSemantics(
-                    child: ListItemInteraction(
-                      onTap: () => _settingsProvider.parallelDownloads =
-                          !parallelDownloads,
-                      child: ListItemLayout(
-                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                        trailingPadding: const .symmetric(
-                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                        ),
-                        headline: Text(tr("parallelDownloads")),
-                        trailing: ExcludeFocus(
-                          child: Switch(
-                            onCheckedChanged: (value) =>
-                                _settingsProvider.parallelDownloads = value,
-                            checked: parallelDownloads,
+              builder: (context, parallelDownloads, _) =>
+                  ListItemTheme.withData(
+                    data: parallelDownloads
+                        ? selectedListItemTheme
+                        : unselectedListItemTheme,
+                    child: ListItemContainer(
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () => _settingsProvider.parallelDownloads =
+                              !parallelDownloads,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("parallelDownloads")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider.parallelDownloads = value,
+                                checked: parallelDownloads,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
             ),
           ),
           verticalSpace,
@@ -944,7 +951,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.beforeNewInstallsShareToAppVerifier,
               builder: (context, beforeNewInstallsShareToAppVerifier, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.withData(
                     data: beforeNewInstallsShareToAppVerifier
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -1006,7 +1013,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Selector<SettingsProvider, bool>(
               selector: (context, settingsProvider) =>
                   settingsProvider.useShizuku,
-              builder: (context, useShizuku, _) => ListItemTheme.merge(
+              builder: (context, useShizuku, _) => ListItemTheme.withData(
                 data: useShizuku
                     ? selectedListItemTheme
                     : unselectedListItemTheme,
@@ -1040,7 +1047,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.shizukuPretendToBeGooglePlay,
               builder: (context, shizukuPretendToBeGooglePlay, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.withData(
                     data: shizukuPretendToBeGooglePlay
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -1083,7 +1090,7 @@ class _SettingsPageState extends State<SettingsPage> {
       const SizedBox(height: 16.0),
       Material(
         clipBehavior: .antiAlias,
-        shape: CornersBorder.rounded(corners: .all(shapeTheme.corner.large)),
+        shape: shapeTheme.applyCorner(corner: shapeTheme.cornerLarge),
         color: unselectedContainerColor,
         child: Padding(
           padding: const .all(16.0),
@@ -1110,7 +1117,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 border: CornersFilledInputBorder(
                   delegate: .rounded,
-                  corners: .all(shapeTheme.corner.large),
+                  corners: .all(shapeTheme.cornerLarge),
                 ),
                 filled: true,
                 fillColor: isSelected
@@ -1191,7 +1198,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     : null;
                 final contentColor = isDisabled ? disabledContentColor : null;
                 final textStyle = TextStyle(color: contentColor);
-                return ListItemTheme.merge(
+                return ListItemTheme.withData(
                   data: useMaterialYou
                       ? selectedListItemTheme
                       : unselectedListItemTheme,
@@ -1244,7 +1251,7 @@ class _SettingsPageState extends State<SettingsPage> {
               builder: (context, useBlackTheme, _) {
                 useBlackTheme = useBlackTheme && !isDisabled;
                 final textStyle = TextStyle(color: contentColor);
-                return ListItemTheme.merge(
+                return ListItemTheme.withData(
                   data: useBlackTheme
                       ? selectedListItemTheme
                       : unselectedListItemTheme,
@@ -1300,7 +1307,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 valueListenable: _settings.themeColor,
                 builder: (context, themeColor, _) {
                   final isSelected = themeColor != obtainiumThemeColor;
-                  return ListItemTheme.merge(
+                  return ListItemTheme.withData(
                     data: !isDisabled && isSelected
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -1357,12 +1364,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         border: CornersFilledInputBorder(
                           delegate: .rounded,
                           corners: isSelected
-                              ? .all(shapeTheme.corner.large)
+                              ? .all(shapeTheme.cornerLarge)
                               : .directional(
-                                  topStart: shapeTheme.corner.extraSmall,
-                                  topEnd: shapeTheme.corner.extraSmall,
-                                  bottomStart: shapeTheme.corner.large,
-                                  bottomEnd: shapeTheme.corner.extraSmall,
+                                  topStart: shapeTheme.cornerExtraSmall,
+                                  topEnd: shapeTheme.cornerExtraSmall,
+                                  bottomStart: shapeTheme.cornerLarge,
+                                  bottomEnd: shapeTheme.cornerExtraSmall,
                                 ),
                         ),
                         filled: true,
@@ -1449,12 +1456,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         border: CornersFilledInputBorder(
                           delegate: .rounded,
                           corners: isSelected
-                              ? .all(shapeTheme.corner.large)
+                              ? .all(shapeTheme.cornerLarge)
                               : .directional(
-                                  topStart: shapeTheme.corner.extraSmall,
-                                  topEnd: shapeTheme.corner.extraSmall,
-                                  bottomStart: shapeTheme.corner.extraSmall,
-                                  bottomEnd: shapeTheme.corner.large,
+                                  topStart: shapeTheme.cornerExtraSmall,
+                                  topEnd: shapeTheme.cornerExtraSmall,
+                                  bottomStart: shapeTheme.cornerExtraSmall,
+                                  bottomEnd: shapeTheme.cornerLarge,
                                 ),
                         ),
                         filled: true,
@@ -1613,10 +1620,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           border: CornersFilledInputBorder(
                             delegate: .rounded,
                             corners: .directional(
-                              topStart: shapeTheme.corner.large,
-                              topEnd: shapeTheme.corner.extraSmall,
-                              bottomStart: shapeTheme.corner.extraSmall,
-                              bottomEnd: shapeTheme.corner.extraSmall,
+                              topStart: shapeTheme.cornerLarge,
+                              topEnd: shapeTheme.cornerExtraSmall,
+                              bottomStart: shapeTheme.cornerExtraSmall,
+                              bottomEnd: shapeTheme.cornerExtraSmall,
                             ),
                           ),
                           filled: true,
@@ -1708,10 +1715,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           border: CornersFilledInputBorder(
                             delegate: .rounded,
                             corners: .directional(
-                              topStart: shapeTheme.corner.extraSmall,
-                              topEnd: shapeTheme.corner.large,
-                              bottomStart: shapeTheme.corner.extraSmall,
-                              bottomEnd: shapeTheme.corner.extraSmall,
+                              topStart: shapeTheme.cornerExtraSmall,
+                              topEnd: shapeTheme.cornerLarge,
+                              bottomStart: shapeTheme.cornerExtraSmall,
+                              bottomEnd: shapeTheme.cornerExtraSmall,
                             ),
                           ),
                           filled: true,
@@ -1768,7 +1775,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.showAppWebpage,
-          builder: (context, showAppWebpage, _) => ListItemTheme.merge(
+          builder: (context, showAppWebpage, _) => ListItemTheme.withData(
             data: showAppWebpage
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1802,7 +1809,7 @@ class _SettingsPageState extends State<SettingsPage> {
         key: const ValueKey("pinUpdates"),
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) => settingsProvider.pinUpdates,
-          builder: (context, pinUpdates, _) => ListItemTheme.merge(
+          builder: (context, pinUpdates, _) => ListItemTheme.withData(
             data: pinUpdates ? selectedListItemTheme : unselectedListItemTheme,
             child: ListItemContainer(
               child: MergeSemantics(
@@ -1834,7 +1841,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.buryNonInstalled,
-          builder: (context, buryNonInstalled, _) => ListItemTheme.merge(
+          builder: (context, buryNonInstalled, _) => ListItemTheme.withData(
             data: buryNonInstalled
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1869,7 +1876,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.groupByCategory,
-          builder: (context, groupByCategory, _) => ListItemTheme.merge(
+          builder: (context, groupByCategory, _) => ListItemTheme.withData(
             data: groupByCategory
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1904,7 +1911,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.hideTrackOnlyWarning,
-          builder: (context, hideTrackOnlyWarning, _) => ListItemTheme.merge(
+          builder: (context, hideTrackOnlyWarning, _) => ListItemTheme.withData(
             data: _settingsProvider.hideTrackOnlyWarning
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1939,7 +1946,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.hideAPKOriginWarning,
-          builder: (context, hideAPKOriginWarning, _) => ListItemTheme.merge(
+          builder: (context, hideAPKOriginWarning, _) => ListItemTheme.withData(
             data: hideAPKOriginWarning
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1972,7 +1979,7 @@ class _SettingsPageState extends State<SettingsPage> {
       const SizedBox(height: 16.0),
       Material(
         clipBehavior: .antiAlias,
-        shape: CornersBorder.rounded(corners: .all(shapeTheme.corner.large)),
+        shape: shapeTheme.applyCorner(corner: shapeTheme.cornerLarge),
         color: unselectedContainerColor,
         child: const Padding(
           padding: .all(16.0),
@@ -1986,7 +1993,7 @@ class _SettingsPageState extends State<SettingsPage> {
       const SizedBox(height: 16.0),
       KeyedSubtree(
         key: const ValueKey("appSource"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.withData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             isFirst: true,
@@ -2007,7 +2014,7 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("wiki"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.withData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             child: ListItemInteraction(
@@ -2027,7 +2034,7 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("crowdsourcedConfigs"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.withData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             child: ListItemInteraction(
@@ -2047,7 +2054,7 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("appLogs"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.withData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             child: ListItemInteraction(
@@ -2069,7 +2076,7 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("importExport"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.withData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             isLast: true,
@@ -2119,7 +2126,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 textAlign: !showBackButton ? .center : .start,
               ),
             ),
-            SwitchTheme.merge(
+            SwitchTheme.mergeWithData(
               data: CustomThemeFactory.createSwitchTheme(
                 colorTheme: colorTheme,
                 shapeTheme: shapeTheme,
@@ -2144,7 +2151,7 @@ class _SettingsPageState extends State<SettingsPage> {
               //   sliver: SliverList.list(children: listItems),
               // ),
             ),
-            ListItemTheme.merge(
+            ListItemTheme.withData(
               data: unselectedListItemTheme,
               child: SliverPadding(
                 padding: const .symmetric(horizontal: 8.0),
@@ -2319,8 +2326,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               SizedBox.square(
                                 dimension: 40.0,
                                 child: Material(
-                                  shape: CornersBorder.rounded(
-                                    corners: .all(shapeTheme.corner.full),
+                                  shape: shapeTheme.applyCorner(
+                                    corner: shapeTheme.cornerFull,
                                   ),
                                   color: colorTheme.primaryFixed,
                                 ),
@@ -2381,7 +2388,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         final contentColor = isDisabled
                             ? disabledContentColor
                             : null;
-                        return ListItemTheme.merge(
+                        return ListItemTheme.withData(
                           data: unselectedListItemTheme,
                           child: ListItemContainer(
                             isLast: true,
@@ -2400,12 +2407,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                           : "",
                                       child: ListItemInteraction(
                                         stateLayerShape: .all(
-                                          CornersBorder.rounded(
+                                          shapeTheme.applyCorners(
                                             corners:
                                                 CornersDirectional.horizontal(
                                                   end: shapeTheme
-                                                      .corner
-                                                      .extraSmall,
+                                                      .cornerExtraSmall,
                                                 ),
                                           ),
                                         ),
@@ -2471,9 +2477,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                   ListItemInteraction(
                                     stateLayerShape: .all(
-                                      CornersBorder.rounded(
+                                      shapeTheme.applyCorners(
                                         corners: CornersDirectional.horizontal(
-                                          start: shapeTheme.corner.extraSmall,
+                                          start: shapeTheme.cornerExtraSmall,
                                         ),
                                       ),
                                     ),
@@ -2882,7 +2888,7 @@ class _LogsPageState extends State<_LogsPage> {
                 return logs != null
                     ? SliverPadding(
                         padding: const .fromLTRB(8.0, 0.0, 8.0, 16.0),
-                        sliver: ListItemTheme.merge(
+                        sliver: ListItemTheme.withData(
                           data: CustomThemeFactory.createListItemTheme(
                             colorTheme: colorTheme,
                             elevationTheme: elevationTheme,
@@ -2946,7 +2952,7 @@ class _LogsPageState extends State<_LogsPage> {
                                         },
                                         child: ListItemLayout(
                                           alignment: .top,
-                                          leading: IconTheme.merge(
+                                          leading: IconTheme.mergeWithData(
                                             data: IconThemeDataPartial.from(
                                               color: iconColor,
                                             ),

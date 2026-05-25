@@ -169,8 +169,8 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
     final stateTheme = StateTheme.of(context);
     final typescaleTheme = TypescaleTheme.of(context);
 
-    final listItemDuration = const DurationThemeData.fallback().medium2;
-    final listItemEasing = const EasingThemeData.fallback().standard;
+    final listItemDuration = const DurationThemeData.defaults().medium2;
+    final listItemEasing = const EasingThemeData.defaults().standard;
 
     Future<List<App>> refresh() {
       HapticFeedback.lightImpact();
@@ -636,8 +636,8 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
             height: 56.0,
             child: Material(
               clipBehavior: .antiAlias,
-              shape: CornersBorder.rounded(
-                corners: Corners.all(shapeTheme.corner.large),
+              shape: shapeTheme.applyCorner(
+                corner: shapeTheme.cornerLarge,
                 // side: isSelected
                 //     ? BorderSide(color: colorTheme.onSecondaryContainer)
                 //     : BorderSide.none,
@@ -1100,7 +1100,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
               scrollDirection: .vertical,
               child: Padding(
                 padding: .fromLTRB(8.0, 0.0, 8.0, 16.0 + padding.bottom),
-                child: ListItemTheme.merge(
+                child: ListItemTheme.withData(
                   data: .from(
                     containerColor: .all(colorTheme.surfaceContainerLow),
                   ),
@@ -1409,7 +1409,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
 
     Widget buildSliverList(List<AppInMemory> apps) {
       const spacing = 2.0;
-      return ListItemTheme.merge(
+      return ListItemTheme.withData(
         data: .from(
           containerColor: .all(
             useBlackTheme ? colorTheme.surface : colorTheme.surface,
@@ -1418,7 +1418,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
             typescaleTheme.bodyLargeEmphasized.toTextStyle(),
           ),
         ),
-        child: CheckboxTheme.merge(
+        child: CheckboxTheme.mergeWithData(
           data: CustomThemeFactory.createCheckboxTheme(
             colorTheme: colorTheme,
             shapeTheme: shapeTheme,
@@ -1676,8 +1676,8 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
                         final bytes = snapshot.data;
                         return Material(
                           clipBehavior: .antiAlias,
-                          shape: CornersBorder.rounded(
-                            corners: .all(shapeTheme.corner.full),
+                          shape: shapeTheme.applyCorner(
+                            corner: shapeTheme.cornerFull,
                           ),
                           color: isSelected
                               ? bytes != null
@@ -1933,9 +1933,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
                 isLast: isLast,
                 containerShape: .all(
                   isSelected
-                      ? CornersBorder.rounded(
-                          corners: Corners.all(shapeTheme.corner.large),
-                        )
+                      ? shapeTheme.applyCorner(corner: shapeTheme.cornerLarge)
                       : null,
                 ),
                 containerColor: .all(
@@ -2284,7 +2282,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
               : hasSelection
               ? colorTheme.primaryContainer
               : colorTheme.surfaceContainerHighest,
-          shape: CornersBorder.rounded(corners: .all(shapeTheme.corner.full)),
+          shape: shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
           elevation: elevation,
           child: Flex.horizontal(
             mainAxisSize: .min,
@@ -2377,8 +2375,8 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
                     constraints: const BoxConstraints(maxWidth: 560.0),
                     child: Material(
                       clipBehavior: .antiAlias,
-                      shape: CornersBorder.rounded(
-                        corners: .all(shapeTheme.corner.extraLarge),
+                      shape: shapeTheme.applyCorner(
+                        corner: shapeTheme.cornerExtraLarge,
                       ),
                       color: colorTheme.surface,
                       child: Padding(
@@ -2419,7 +2417,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
                                   (noAppsForFilter && !isFilterOff) || (noApps)
                                   ? 1.0
                                   : 0.0,
-                              motion: const SpringThemeData.expressive()
+                              motion: const SpringThemeData.defaultsExpressive()
                                   .defaultSpatial
                                   .toMotion(snapToEnd: true),
                               builder: (context, value, child) => Align.center(
@@ -2927,8 +2925,8 @@ class _AppChangelogPageState extends State<AppChangelogPage> {
                       ),
                     ),
                     Material(
-                      shape: CornersBorder.rounded(
-                        corners: .all(shapeTheme.corner.large),
+                      shape: shapeTheme.applyCorner(
+                        corner: shapeTheme.cornerLarge,
                       ),
                       color: colorTheme.surface,
                       child: Padding(

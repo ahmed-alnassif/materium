@@ -111,12 +111,12 @@ class ExtendedFloatingActionButton extends StatelessWidget {
         },
       ),
       containerShape: .resolveWith(
-        (states) => CornersBorder.rounded(
-          corners: .all(switch (states.settings.size) {
-            .small => shapeTheme.corner.large,
-            .medium => shapeTheme.corner.largeIncreased,
-            .large => shapeTheme.corner.extraLarge,
-          }),
+        (states) => shapeTheme.applyCorner(
+          corner: switch (states.settings.size) {
+            .small => shapeTheme.cornerLarge,
+            .medium => shapeTheme.cornerLargeIncreased,
+            .large => shapeTheme.cornerExtraLarge,
+          },
         ),
       ),
       containerColor: containerColor,

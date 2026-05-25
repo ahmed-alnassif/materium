@@ -36,8 +36,8 @@ abstract class TypographyThemeDataPartial with Diagnosticable {
     TypescaleThemeDataPartial? typescale,
   }) => typeface != null || typescale != null
       ? .from(
-          typeface: this.typeface?.merge(typeface) ?? typeface,
-          typescale: this.typescale?.merge(typescale) ?? typescale,
+          typeface: this.typeface?.maybeMerge(typeface) ?? typeface,
+          typescale: this.typescale?.maybeMerge(typescale) ?? typescale,
         )
       : this;
 
@@ -65,17 +65,6 @@ abstract class TypographyThemeDataPartial with Diagnosticable {
         ),
       );
   }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      runtimeType == other.runtimeType &&
-          other is TypographyThemeDataPartial &&
-          typeface == other.typeface &&
-          typescale == other.typescale;
-
-  @override
-  int get hashCode => Object.hash(runtimeType, typeface, typescale);
 
   /// A Material 3 Expressive type scale which uses Roboto Flex.
   static const material3Expressive2025 = TypographyThemeDataPartial.from(
@@ -135,7 +124,7 @@ abstract class TypographyThemeDataPartial with Diagnosticable {
   );
 }
 
-class _TypographyThemeDataPartial extends TypographyThemeDataPartial {
+final class _TypographyThemeDataPartial extends TypographyThemeDataPartial {
   const _TypographyThemeDataPartial({this.typeface, this.typescale});
 
   @override
@@ -143,6 +132,16 @@ class _TypographyThemeDataPartial extends TypographyThemeDataPartial {
 
   @override
   final TypescaleThemeDataPartial? typescale;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _TypographyThemeDataPartial &&
+          typeface == other.typeface &&
+          typescale == other.typescale;
+
+  @override
+  int get hashCode => Object.hash(typeface, typescale);
 }
 
 abstract class TypographyThemeData extends TypographyThemeDataPartial {
@@ -176,8 +175,8 @@ abstract class TypographyThemeData extends TypographyThemeDataPartial {
     TypescaleThemeDataPartial? typescale,
   }) => typeface != null || typescale != null
       ? .from(
-          typeface: this.typeface.merge(typeface),
-          typescale: this.typescale.merge(typescale),
+          typeface: this.typeface.maybeMerge(typeface),
+          typescale: this.typescale.maybeMerge(typescale),
         )
       : this;
 
@@ -193,20 +192,9 @@ abstract class TypographyThemeData extends TypographyThemeDataPartial {
       ..add(DiagnosticsProperty<TypefaceThemeData>("typeface", typeface))
       ..add(DiagnosticsProperty<TypescaleThemeData>("typescale", typescale));
   }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      runtimeType == other.runtimeType &&
-          other is TypographyThemeData &&
-          typeface == other.typeface &&
-          typescale == other.typescale;
-
-  @override
-  int get hashCode => Object.hash(runtimeType, typeface, typescale);
 }
 
-class _TypographyThemeData extends TypographyThemeData {
+final class _TypographyThemeData extends TypographyThemeData {
   const _TypographyThemeData({required this.typeface, required this.typescale});
 
   @override
@@ -214,6 +202,16 @@ class _TypographyThemeData extends TypographyThemeData {
 
   @override
   final TypescaleThemeData typescale;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _TypographyThemeData &&
+          typeface == other.typeface &&
+          typescale == other.typescale;
+
+  @override
+  int get hashCode => Object.hash(typeface, typescale);
 }
 
 class TypographyTheme extends StatelessWidget implements ProxyWidget {
@@ -225,9 +223,9 @@ class TypographyTheme extends StatelessWidget implements ProxyWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => TypefaceTheme(
+  Widget build(BuildContext context) => TypefaceTheme.mergeWithData(
     data: data.typeface,
-    child: TypescaleTheme(data: data.typescale, child: child),
+    child: TypescaleTheme.replaceWithData(data: data.typescale, child: child),
   );
 
   @override
@@ -245,13 +243,13 @@ class TypographyTheme extends StatelessWidget implements ProxyWidget {
         TypographyTheme(key: key, data: of(context).merge(data), child: child),
   );
 
-  static TypographyThemeData? maybeOf(BuildContext context) {
-    final typefaceTheme = TypefaceTheme.maybeOf(context);
-    final typescaleTheme = TypescaleTheme.maybeOf(context);
-    return typefaceTheme != null && typescaleTheme != null
-        ? .from(typeface: typefaceTheme, typescale: typescaleTheme)
-        : null;
-  }
+  // static TypographyThemeData? maybeOf(BuildContext context) {
+  //   final typefaceTheme = TypefaceTheme.maybeOf(context);
+  //   final typescaleTheme = TypescaleTheme.maybeOf(context);
+  //   return typefaceTheme != null && typescaleTheme != null
+  //       ? .from(typeface: typefaceTheme, typescale: typescaleTheme)
+  //       : null;
+  // }
 
   static TypographyThemeData of(BuildContext context) => .from(
     typeface: TypefaceTheme.of(context),
@@ -290,8 +288,8 @@ class TypographyDefaults with Diagnosticable {
     TypescaleThemeDataPartial? typescale,
   }) => typeface != null || typescale != null
       ? .from(
-          typeface: this.typeface.merge(typeface),
-          typescale: this.typescale.merge(typescale),
+          typeface: this.typeface.maybeMerge(typeface),
+          typescale: this.typescale.maybeMerge(typescale),
         )
       : this;
 
@@ -328,7 +326,7 @@ class TypographyDefaults with Diagnosticable {
           typescale == other.typescale;
 
   @override
-  int get hashCode => Object.hash(runtimeType, typeface, typescale);
+  int get hashCode => Object.hash(typeface, typescale);
 
   /// A Material 3 Expressive type scale which uses Roboto Flex.
   static const material3Expressive2025 = TypographyDefaults.from(

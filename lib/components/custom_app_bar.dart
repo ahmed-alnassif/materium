@@ -112,14 +112,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   CustomAppBarBehavior get _behavior => widget.behavior ?? .duplicate;
 
-  TypeStyle get _collapsedTitleTypeStyle =>
+  TextGeometry get _collapsedTitleTypeStyle =>
       _typescaleTheme.titleLargeEmphasized;
 
   TextStyle get _collapsedTitleTextStyle => _collapsedTitleTypeStyle
       .toTextStyle(color: _colorTheme.onSurface)
       .merge(widget.collapsedTitleTextStyle);
 
-  TypeStyle get _collapsedSubtitleTypeStyle => _typescaleTheme.labelMedium;
+  TextGeometry get _collapsedSubtitleTypeStyle => _typescaleTheme.labelMedium;
 
   TextStyle get _collapsedSubtitleTextStyle => _collapsedSubtitleTypeStyle
       .toTextStyle(color: _colorTheme.onSurfaceVariant)
@@ -143,7 +143,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Color get _collapsedColor =>
       widget.collapsedContainerColor ?? _colorTheme.surfaceContainer;
 
-  TypeStyle get _expandedTitleTypeStyle => switch (widget.type) {
+  TextGeometry get _expandedTitleTypeStyle => switch (widget.type) {
     .small => _collapsedTitleTypeStyle,
     .mediumFlexible => _typescaleTheme.headlineMediumEmphasized,
     .largeFlexible => _typescaleTheme.displaySmallEmphasized,
@@ -153,7 +153,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
       .toTextStyle(color: _colorTheme.onSurface)
       .merge(widget.expandedTitleTextStyle);
 
-  TypeStyle get _expandedSubtitleTypeStyle => switch (widget.type) {
+  TextGeometry get _expandedSubtitleTypeStyle => switch (widget.type) {
     .small => _collapsedSubtitleTypeStyle,
     .mediumFlexible => _typescaleTheme.labelLarge,
     .largeFlexible => _typescaleTheme.titleMedium,

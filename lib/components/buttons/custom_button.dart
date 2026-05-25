@@ -440,7 +440,7 @@ class _ButtonContainerState<S extends Object?> extends State<ButtonContainer<S>>
     _containerShadowColor = widget.style.containerShadowColor.resolve(_states);
     final stateLayerColor = widget.style.stateLayerColor;
     final stateLayerOpacity = widget.style.stateLayerOpacity;
-    _resolvedIconTheme = _iconTheme.merge(
+    _resolvedIconTheme = _iconTheme.maybeMerge(
       widget.style.iconTheme.resolve(_states),
     );
     _resolvedLabelTextStyle = _defaultTextStyle.style.merge(
@@ -480,7 +480,7 @@ class _ButtonContainerState<S extends Object?> extends State<ButtonContainer<S>>
             constraints: constraints,
             child: AnimatedBuilder(
               animation: _spatialController,
-              builder: (context, child) => FocusRingTheme.merge(
+              builder: (context, child) => FocusRingTheme.mergeWithData(
                 data: .from(
                   shape: .all(
                     _containerShapeAnimation.value ?? _containerShape,
@@ -555,7 +555,7 @@ class _ButtonContainerState<S extends Object?> extends State<ButtonContainer<S>>
                               style:
                                   _labelTextStyleAnimation.value ??
                                   _resolvedLabelTextStyle,
-                              child: IconTheme(
+                              child: IconTheme.replaceWithData(
                                 data:
                                     _iconThemeAnimation.value ??
                                     _resolvedIconTheme,

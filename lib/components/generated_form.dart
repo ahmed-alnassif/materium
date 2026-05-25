@@ -1127,8 +1127,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
                           ),
                           iconSize: const WidgetStatePropertyAll(20.0),
                           shape: WidgetStatePropertyAll(
-                            CornersBorder.rounded(
-                              corners: Corners.all(shapeTheme.corner.medium),
+                            shapeTheme.applyCorner(
+                              corner: shapeTheme.cornerMedium,
                             ),
                           ),
                           overlayColor: WidgetStateLayerColor(
@@ -1197,9 +1197,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                         ),
                         iconSize: const WidgetStatePropertyAll(20.0),
                         shape: WidgetStatePropertyAll(
-                          CornersBorder.rounded(
-                            corners: Corners.all(shapeTheme.corner.full),
-                          ),
+                          shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
                         ),
                         side: WidgetStatePropertyAll(
                           BorderSide(

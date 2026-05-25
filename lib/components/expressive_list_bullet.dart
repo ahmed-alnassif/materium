@@ -44,9 +44,7 @@ class ExpressiveListBullet extends StatelessWidget {
             width: size,
             height: size,
             replacement: Material(
-              shape: CornersBorder.rounded(
-                corners: .all(shapeTheme.corner.full),
-              ),
+              shape: shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
               color: color,
             ),
             child: CustomPaint(

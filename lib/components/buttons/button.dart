@@ -193,7 +193,7 @@ class Button extends StatelessWidget {
             ),
           },
         };
-        return CornersBorder.rounded(corners: .all(corner));
+        return shapeTheme.applyCorner(corner: corner);
       }),
       containerColor: .resolveWith(
         (states) => switch (states) {

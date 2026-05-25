@@ -564,7 +564,7 @@ class _AppPageState extends State<AppPage> {
           baseColor: colorTheme.surfaceContainer,
           highlightColor: colorTheme.surfaceContainerHighest,
         ),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.withData(
           data: .from(
             containerColor: .all(colorTheme.surface),
             leadingIconTheme: .all(
@@ -650,8 +650,8 @@ class _AppPageState extends State<AppPage> {
                             backgroundColor: colorTheme.surfaceContainer,
                           ),
                           codeblockDecoration: ShapeDecoration(
-                            shape: CornersBorder.rounded(
-                              corners: .all(shapeTheme.corner.medium),
+                            shape: shapeTheme.applyCorner(
+                              corner: shapeTheme.cornerMedium,
                             ),
                             color: colorTheme.surfaceContainer,
                           ),
@@ -716,8 +716,8 @@ class _AppPageState extends State<AppPage> {
                                       height: 40.0,
                                       child: Material(
                                         clipBehavior: .antiAlias,
-                                        shape: CornersBorder.rounded(
-                                          corners: .all(shapeTheme.corner.full),
+                                        shape: shapeTheme.applyCorner(
+                                          corner: shapeTheme.cornerFull,
                                           // side: BorderSide(
                                           //   color: colorTheme.outlineVariant,
                                           // ),
@@ -1030,8 +1030,8 @@ class _AppPageState extends State<AppPage> {
                             .mapIndexed(
                               (index, value) => ListItemInteraction(
                                 stateLayerShape: .all(
-                                  CornersBorder.rounded(
-                                    corners: .all(shapeTheme.corner.none),
+                                  shapeTheme.applyCorner(
+                                    corner: shapeTheme.cornerNone,
                                   ),
                                 ),
                                 onLongPress: () => _copyText(value.key),
@@ -1105,8 +1105,8 @@ class _AppPageState extends State<AppPage> {
                         ...?app?.certificateHashes.mapIndexed(
                           (index, hash) => ListItemInteraction(
                             stateLayerShape: .all(
-                              CornersBorder.rounded(
-                                corners: .all(shapeTheme.corner.none),
+                              shapeTheme.applyCorner(
+                                corner: shapeTheme.cornerNone,
                               ),
                             ),
                             onLongPress: () => _copyText(hash),
@@ -1203,9 +1203,7 @@ class _AppPageState extends State<AppPage> {
         Padding(
           padding: const .symmetric(horizontal: 8.0),
           child: Material(
-            shape: CornersBorder.rounded(
-              corners: .all(shapeTheme.corner.large),
-            ),
+            shape: shapeTheme.applyCorner(corner: shapeTheme.cornerLarge),
             color: colorTheme.surface,
             child: Padding(
               padding: const .symmetric(horizontal: 16.0, vertical: 16.0 - 8.0),
@@ -1506,7 +1504,7 @@ class _AppPageState extends State<AppPage> {
       padding: const WidgetStatePropertyAll(EdgeInsets.zero),
       iconSize: const WidgetStatePropertyAll(24.0),
       shape: WidgetStatePropertyAll(
-        CornersBorder.rounded(corners: Corners.all(shapeTheme.corner.full)),
+        shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
       ),
       overlayColor: WidgetStateLayerColor(
         color: WidgetStatePropertyAll(colorTheme.onSurfaceVariant),
@@ -1541,7 +1539,7 @@ class _AppPageState extends State<AppPage> {
           app?.app.installedVersion == app?.app.latestVersion;
       return Material(
         clipBehavior: .antiAlias,
-        shape: CornersBorder.rounded(corners: .all(shapeTheme.corner.none)),
+        shape: shapeTheme.applyCorner(corner: shapeTheme.cornerNone),
         color: backgroundColor,
         child: Padding(
           padding: .fromLTRB(padding.left, 0.0, padding.right, bottomPadding),
@@ -1978,8 +1976,8 @@ class _AppPageState extends State<AppPage> {
                                 child: Tooltip(
                                   message: isCollapsed ? app?.name ?? "" : "",
                                   child: InkWell(
-                                    customBorder: CornersBorder.rounded(
-                                      corners: .all(shapeTheme.corner.full),
+                                    customBorder: shapeTheme.applyCorner(
+                                      corner: shapeTheme.cornerFull,
                                     ),
                                     overlayColor: WidgetStateLayerColor(
                                       color: WidgetStatePropertyAll(
@@ -2006,10 +2004,8 @@ class _AppPageState extends State<AppPage> {
                                         child: Skeleton.leaf(
                                           child: Material(
                                             clipBehavior: .antiAlias,
-                                            shape: CornersBorder.rounded(
-                                              corners: .all(
-                                                shapeTheme.corner.full,
-                                              ),
+                                            shape: shapeTheme.applyCorner(
+                                              corner: shapeTheme.cornerFull,
                                             ),
                                             color: !isLoading && bytes != null
                                                 ? useBlackTheme
@@ -2238,7 +2234,7 @@ class _AppPageAppBarState extends State<_AppPageAppBar> {
 
         return Material(
           clipBehavior: .antiAlias,
-          shape: CornersBorder.rounded(corners: .all(shapeTheme.corner.none)),
+          shape: shapeTheme.applyCorner(corner: shapeTheme.cornerNone),
           color: color,
           child: Stack(
             alignment: .topCenter,
@@ -2256,7 +2252,7 @@ class _AppPageAppBarState extends State<_AppPageAppBar> {
                       padding: .only(top: iconAreaPadding),
                       child: SizedBox(
                         height: iconAreaHeight,
-                        child: IconTheme.merge(
+                        child: IconTheme.mergeWithData(
                           data: .from(opticalSize: iconSize, size: iconSize),
                           child: widget.icon,
                         ),
@@ -2380,8 +2376,8 @@ class _SegmentedListItemState extends State<_SegmentedListItem>
     unawaited(
       _controller.animateTo(
         1.0,
-        duration: const DurationThemeData.fallback().long2,
-        curve: const EasingThemeData.fallback().standard,
+        duration: const DurationThemeData.defaults().long2,
+        curve: const EasingThemeData.defaults().standard,
       ),
     );
   }

@@ -450,8 +450,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     //   ),
                     //   iconSize: const WidgetStatePropertyAll(24.0),
                     //   shape: WidgetStatePropertyAll(
-                    //     CornersBorder.rounded(
-                    //       corners: Corners.all(shapeTheme.corner.large),
+                    //     shapeTheme.applyCorner(
+                    //       corner: shapeTheme.cornerLarge,
                     //     ),
                     //   ),
                     //   overlayColor: WidgetStateLayerColor(
@@ -962,7 +962,7 @@ class _SelectionModalState extends State<SelectionModal> {
         .where((e) => e.value)
         .toList();
 
-    Widget content = ListItemTheme.merge(
+    Widget content = ListItemTheme.withData(
       data: .from(
         overlineTextStyle: .all(typescaleTheme.labelSmall.toTextStyle()),
         headlineTextStyle: .all(
@@ -1061,7 +1061,7 @@ class _SelectionModalState extends State<SelectionModal> {
     );
 
     if (widget.onlyOneSelectionAllowed) {
-      content = RadioButtonTheme.merge(
+      content = RadioButtonTheme.mergeWithData(
         data: CustomThemeFactory.createRadioButtonTheme(
           colorTheme: colorTheme,
           shapeTheme: shapeTheme,
@@ -1082,7 +1082,7 @@ class _SelectionModalState extends State<SelectionModal> {
         ),
       );
     } else {
-      content = CheckboxTheme.merge(
+      content = CheckboxTheme.mergeWithData(
         data: CustomThemeFactory.createCheckboxTheme(
           colorTheme: colorTheme,
           shapeTheme: shapeTheme,

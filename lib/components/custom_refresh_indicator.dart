@@ -464,7 +464,7 @@ class CustomRefreshIndicatorState extends State<CustomRefreshIndicator>
   void _updateSwitchAnimation() {
     final showIndeterminateIndicator = _status == .snap || _status == .refresh;
     if (_showIndeterminateIndicator != showIndeterminateIndicator) {
-      final spring = const SpringThemeData.expressive().defaultEffects
+      final spring = const SpringThemeData.defaultsExpressive().defaultEffects
           .toSpringDescription();
       final oldValue = _switchController.value;
       final newValue = showIndeterminateIndicator ? 1.0 : 0.0;
@@ -592,7 +592,7 @@ class CustomRefreshIndicatorState extends State<CustomRefreshIndicator>
         dimension: containerSize,
         child: Material(
           clipBehavior: .antiAlias,
-          shape: CornersBorder.rounded(corners: .all(_shapeTheme.corner.full)),
+          shape: _shapeTheme.applyCorner(corner: _shapeTheme.cornerFull),
           color: containerColor,
           elevation: elevation,
           child: Stack(

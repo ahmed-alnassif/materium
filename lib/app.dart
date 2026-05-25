@@ -119,7 +119,7 @@ class _ObtainiumState extends State<Obtainium> {
   }
 
   Widget _buildTypefaceTheme(BuildContext context, Widget child) =>
-      TypefaceTheme.merge(data: _typography.typeface, child: child);
+      TypefaceTheme.mergeWithData(data: _typography.typeface, child: child);
 
   Widget _buildReferenceThemes(BuildContext context, Widget child) =>
       CombiningBuilder(
@@ -179,7 +179,7 @@ class _ObtainiumState extends State<Obtainium> {
             platform: platform,
           );
 
-          return ColorTheme(
+          return ColorTheme.replaceWithData(
             data: colorTheme,
             child: StaticColors(data: staticColors, child: child!),
           );
@@ -188,10 +188,13 @@ class _ObtainiumState extends State<Obtainium> {
       );
 
   Widget _buildSpringTheme(BuildContext context, Widget child) =>
-      SpringTheme(data: const .expressive(), child: child);
+      SpringTheme.replaceWithData(
+        data: const .defaultsExpressive(),
+        child: child,
+      );
 
   Widget _buildTypescaleTheme(BuildContext context, Widget child) =>
-      TypescaleTheme.merge(data: _typography.typescale, child: child);
+      TypescaleTheme.mergeWithData(data: _typography.typescale, child: child);
 
   Widget _buildSystemThemes(BuildContext context, Widget child) =>
       CombiningBuilder(
@@ -207,7 +210,7 @@ class _ObtainiumState extends State<Obtainium> {
 
     final colorTheme = ColorTheme.of(context);
 
-    return LoadingIndicatorTheme.merge(
+    return LoadingIndicatorTheme.mergeWithData(
       data: .from(
         indicatorColor: useBlackTheme ? colorTheme.primary : null,
         containedContainerColor: useBlackTheme ? colorTheme.primaryDim : null,

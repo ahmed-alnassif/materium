@@ -18,7 +18,7 @@ abstract final class LegacyThemeFactory {
     scaffoldBackgroundColor ??= colorTheme.surface;
     final modalBarrierColor = colorTheme.scrim.withValues(alpha: 0.32);
     return ThemeData(
-      colorScheme: colorTheme.toLegacy(),
+      colorScheme: colorTheme.asLegacy,
       visualDensity: .standard,
       splashFactory: InkSparkle.splashFactory,
       textTheme: typescaleTheme.toBaselineTextTheme(),
@@ -37,7 +37,7 @@ abstract final class LegacyThemeFactory {
           return colorTheme.outline;
         }),
       ),
-      iconTheme: IconThemeData.fallback(colorTheme: colorTheme).toLegacy(),
+      iconTheme: IconThemeData.defaults(colorTheme: colorTheme).toLegacy(),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: colorTheme.surfaceContainer,
         elevation: elevationTheme.level0,
@@ -77,9 +77,7 @@ abstract final class LegacyThemeFactory {
         constraints: const BoxConstraints(minHeight: 24.0),
         padding: const .symmetric(horizontal: 8.0),
         decoration: ShapeDecoration(
-          shape: CornersBorder.rounded(
-            corners: .all(shapeTheme.corner.extraSmall),
-          ),
+          shape: shapeTheme.applyCorner(corner: shapeTheme.cornerExtraSmall),
           color: colorTheme.inverseSurface,
         ),
         textAlign: .start,
@@ -93,9 +91,7 @@ abstract final class LegacyThemeFactory {
         elevation: elevationTheme.level0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
-        shape: CornersBorder.rounded(
-          corners: .all(shapeTheme.corner.extraLarge),
-        ),
+        shape: shapeTheme.applyCorner(corner: shapeTheme.cornerExtraLarge),
         titleTextStyle: typescaleTheme.headlineSmall.toTextStyle(
           color: colorTheme.onSurface,
         ),
@@ -106,7 +102,7 @@ abstract final class LegacyThemeFactory {
       bottomSheetTheme: BottomSheetThemeData(
         showDragHandle: true,
         clipBehavior: .antiAlias,
-        shape: CornersBorder.rounded(corners: shapeTheme.corner.extraLargeTop),
+        shape: shapeTheme.applyCorners(corners: shapeTheme.cornerExtraLargeTop),
         surfaceTintColor: Colors.transparent,
         shadowColor: colorTheme.shadow,
         backgroundColor: colorTheme.surfaceContainerLow,
@@ -137,9 +133,7 @@ abstract final class LegacyThemeFactory {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: .floating,
-        shape: CornersBorder.rounded(
-          corners: .all(shapeTheme.corner.extraSmall),
-        ),
+        shape: shapeTheme.applyCorner(corner: shapeTheme.cornerExtraSmall),
       ),
       menuTheme: MenuThemeData(
         style: createMenuStyle(
@@ -270,13 +264,13 @@ abstract final class LegacyThemeFactory {
           .extraLarge => const .symmetric(horizontal: 64.0, vertical: 48.0),
         };
 
-    final cornerRound = shapeTheme.corner.full;
+    final cornerRound = shapeTheme.cornerFull;
     final cornerSquare = switch (size) {
-      .extraSmall => shapeTheme.corner.medium,
-      .small => shapeTheme.corner.medium,
-      .medium => shapeTheme.corner.large,
-      .large => shapeTheme.corner.extraLarge,
-      .extraLarge => shapeTheme.corner.extraLarge,
+      .extraSmall => shapeTheme.cornerMedium,
+      .small => shapeTheme.cornerMedium,
+      .medium => shapeTheme.cornerLarge,
+      .large => shapeTheme.cornerExtraLarge,
+      .extraLarge => shapeTheme.cornerExtraLarge,
     };
     final corner = isSelectedNotDefault
         ? switch (shape) {
@@ -405,9 +399,7 @@ abstract final class LegacyThemeFactory {
       maximumSize: const WidgetStatePropertyAll(Size.infinite),
       padding: WidgetStatePropertyAll(resolvedPadding),
       iconSize: WidgetStatePropertyAll(iconSize),
-      shape: WidgetStatePropertyAll(
-        CornersBorder.rounded(corners: .all(corner)),
-      ),
+      shape: WidgetStatePropertyAll(shapeTheme.applyCorner(corner: corner)),
       side: WidgetStatePropertyAll(side),
       overlayColor: WidgetStateLayerColor(
         color: WidgetStatePropertyAll(foregroundColor),
@@ -497,13 +489,13 @@ abstract final class LegacyThemeFactory {
       vertical: (resolvedHeight - resolvedIconSize) / 2.0,
     );
 
-    final cornerRound = shapeTheme.corner.full;
+    final cornerRound = shapeTheme.cornerFull;
     final cornerSquare = switch (size) {
-      .extraSmall => shapeTheme.corner.medium,
-      .small => shapeTheme.corner.medium,
-      .medium => shapeTheme.corner.large,
-      .large => shapeTheme.corner.extraLarge,
-      .extraLarge => shapeTheme.corner.extraLarge,
+      .extraSmall => shapeTheme.cornerMedium,
+      .small => shapeTheme.cornerMedium,
+      .medium => shapeTheme.cornerLarge,
+      .large => shapeTheme.cornerExtraLarge,
+      .extraLarge => shapeTheme.cornerExtraLarge,
     };
 
     final corner = isSelectedNotDefault
@@ -639,9 +631,7 @@ abstract final class LegacyThemeFactory {
       maximumSize: const WidgetStatePropertyAll(.infinite),
       padding: const WidgetStatePropertyAll(.zero),
       iconSize: WidgetStatePropertyAll(resolvedIconSize),
-      shape: WidgetStatePropertyAll(
-        CornersBorder.rounded(corners: .all(corner)),
-      ),
+      shape: WidgetStatePropertyAll(shapeTheme.applyCorner(corner: corner)),
       side: WidgetStatePropertyAll(side),
       overlayColor: WidgetStateLayerColor(
         color: WidgetStatePropertyAll(resolvedIconColor),
@@ -670,7 +660,7 @@ abstract final class LegacyThemeFactory {
       visualDensity: VisualDensity.standard,
       padding: const WidgetStatePropertyAll(.fromLTRB(4.0, 2.0, 4.0, 2.0)),
       shape: WidgetStatePropertyAll(
-        CornersBorder.rounded(corners: .all(shapeTheme.corner.large)),
+        shapeTheme.applyCorner(corner: shapeTheme.cornerLarge),
       ),
       backgroundColor: WidgetStatePropertyAll(switch (variant) {
         LegacyMenuVariant.standard => colorTheme.surfaceContainerLow,
@@ -693,10 +683,10 @@ abstract final class LegacyThemeFactory {
     bool isLast = true,
     bool isSelected = false,
   }) {
-    final outerCorner = shapeTheme.corner.medium;
-    final innerCorner = shapeTheme.corner.extraSmall;
+    final outerCorner = shapeTheme.cornerMedium;
+    final innerCorner = shapeTheme.cornerExtraSmall;
 
-    final resolvedContainerShape = CornersBorder.rounded(
+    final resolvedContainerShape = shapeTheme.applyCorners(
       corners: isSelected
           ? .all(outerCorner)
           : .vertical(

@@ -1495,6 +1495,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
                   : .standard;
 
               final Widget overflowButton = MenuAnchor(
+                animated: true,
                 consumeOutsideTap: true,
                 crossAxisUnconstrained: false,
                 style: LegacyThemeFactory.createMenuStyle(

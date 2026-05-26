@@ -1538,6 +1538,7 @@ class _SettingsAppBarState extends State<SettingsAppBar> {
                 ),
                 const SizedBox(width: 8.0 - 4.0),
                 MenuAnchor(
+                  animated: true,
                   consumeOutsideTap: true,
                   crossAxisUnconstrained: false,
                   menuChildren: [

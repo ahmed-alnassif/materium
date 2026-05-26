@@ -1100,7 +1100,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
               scrollDirection: .vertical,
               child: Padding(
                 padding: .fromLTRB(8.0, 0.0, 8.0, 16.0 + padding.bottom),
-                child: ListItemTheme.withData(
+                child: ListItemTheme.mergeWithData(
                   data: .from(
                     containerColor: .all(colorTheme.surfaceContainerLow),
                   ),
@@ -1409,7 +1409,7 @@ class AppsPageState extends State<AppsPage> with TickerProviderStateMixin {
 
     Widget buildSliverList(List<AppInMemory> apps) {
       const spacing = 2.0;
-      return ListItemTheme.withData(
+      return ListItemTheme.mergeWithData(
         data: .from(
           containerColor: .all(
             useBlackTheme ? colorTheme.surface : colorTheme.surface,

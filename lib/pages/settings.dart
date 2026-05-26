@@ -484,7 +484,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 : useBlackTheme
                 ? colorTheme.primaryContainer
                 : colorTheme.secondaryContainer;
-            return ListItemTheme.withData(
+            return ListItemTheme.mergeWithData(
               data: isSelected
                   ? selectedListItemTheme
                   : unselectedListItemTheme,
@@ -539,7 +539,7 @@ class _SettingsPageState extends State<SettingsPage> {
       key: const ValueKey("useFGService"),
       child: Selector<SettingsProvider, bool>(
         selector: (context, settingsProvider) => settingsProvider.useFGService,
-        builder: (context, useFGService, _) => ListItemTheme.withData(
+        builder: (context, useFGService, _) => ListItemTheme.mergeWithData(
           data: useFGService ? selectedListItemTheme : unselectedListItemTheme,
           child: ListItemContainer(
             child: MergeSemantics(
@@ -572,7 +572,7 @@ class _SettingsPageState extends State<SettingsPage> {
         selector: (context, settingsProvider) =>
             settingsProvider.enableBackgroundUpdates,
         builder: (context, enableBackgroundUpdates, _) =>
-            ListItemTheme.withData(
+            ListItemTheme.mergeWithData(
               data: enableBackgroundUpdates
                   ? selectedListItemTheme
                   : unselectedListItemTheme,
@@ -628,33 +628,34 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Selector<SettingsProvider, bool>(
         selector: (context, settingsProvider) =>
             settingsProvider.bgUpdatesOnWiFiOnly,
-        builder: (context, bgUpdatesOnWiFiOnly, _) => ListItemTheme.withData(
-          data: bgUpdatesOnWiFiOnly
-              ? selectedListItemTheme
-              : unselectedListItemTheme,
-          child: ListItemContainer(
-            child: MergeSemantics(
-              child: ListItemInteraction(
-                onTap: () => _settingsProvider.bgUpdatesOnWiFiOnly =
-                    !bgUpdatesOnWiFiOnly,
-                child: ListItemLayout(
-                  padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                  trailingPadding: const .symmetric(
-                    vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                  ),
-                  headline: Text(tr("bgUpdatesOnWiFiOnly")),
-                  trailing: ExcludeFocus(
-                    child: Switch(
-                      onCheckedChanged: (value) =>
-                          _settingsProvider.bgUpdatesOnWiFiOnly = value,
-                      checked: bgUpdatesOnWiFiOnly,
+        builder: (context, bgUpdatesOnWiFiOnly, _) =>
+            ListItemTheme.mergeWithData(
+              data: bgUpdatesOnWiFiOnly
+                  ? selectedListItemTheme
+                  : unselectedListItemTheme,
+              child: ListItemContainer(
+                child: MergeSemantics(
+                  child: ListItemInteraction(
+                    onTap: () => _settingsProvider.bgUpdatesOnWiFiOnly =
+                        !bgUpdatesOnWiFiOnly,
+                    child: ListItemLayout(
+                      padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                      trailingPadding: const .symmetric(
+                        vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                      ),
+                      headline: Text(tr("bgUpdatesOnWiFiOnly")),
+                      trailing: ExcludeFocus(
+                        child: Switch(
+                          onCheckedChanged: (value) =>
+                              _settingsProvider.bgUpdatesOnWiFiOnly = value,
+                          checked: bgUpdatesOnWiFiOnly,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
       ),
     );
 
@@ -664,7 +665,7 @@ class _SettingsPageState extends State<SettingsPage> {
         selector: (context, settingsProvider) =>
             settingsProvider.bgUpdatesWhileChargingOnly,
         builder: (context, bgUpdatesWhileChargingOnly, _) =>
-            ListItemTheme.withData(
+            ListItemTheme.mergeWithData(
               data: bgUpdatesWhileChargingOnly
                   ? selectedListItemTheme
                   : unselectedListItemTheme,
@@ -748,33 +749,39 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Selector<SettingsProvider, bool>(
               selector: (context, settingsProvider) =>
                   settingsProvider.checkOnStart,
-              builder: (context, checkOnStart, _) => ListItemTheme.withData(
-                data: checkOnStart
-                    ? selectedListItemTheme
-                    : unselectedListItemTheme,
-                child: ListItemContainer(
-                  child: MergeSemantics(
-                    child: ListItemInteraction(
-                      onTap: () =>
-                          _settingsProvider.checkOnStart = !checkOnStart,
-                      child: ListItemLayout(
-                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                        trailingPadding: const .symmetric(
-                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                        ),
-                        headline: Text(tr("checkOnStart")),
-                        trailing: ExcludeFocus(
-                          child: Switch(
-                            onCheckedChanged: (value) =>
-                                _settingsProvider.checkOnStart = value,
-                            checked: checkOnStart,
+              builder: (context, checkOnStart, _) =>
+                  ListItemTheme.mergeWithData(
+                    data: checkOnStart
+                        ? selectedListItemTheme
+                        : unselectedListItemTheme,
+                    child: ListItemContainer(
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () =>
+                              _settingsProvider.checkOnStart = !checkOnStart,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("checkOnStart")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider.checkOnStart = value,
+                                checked: checkOnStart,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
             ),
           ),
           verticalSpace,
@@ -784,7 +791,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.checkUpdateOnDetailPage,
               builder: (context, checkUpdateOnDetailPage, _) =>
-                  ListItemTheme.withData(
+                  ListItemTheme.mergeWithData(
                     data: checkUpdateOnDetailPage
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -827,7 +834,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
               builder: (context, onlyCheckInstalledOrTrackOnlyApps, _) =>
-                  ListItemTheme.withData(
+                  ListItemTheme.mergeWithData(
                     data: onlyCheckInstalledOrTrackOnlyApps
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -874,7 +881,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.removeOnExternalUninstall,
               builder: (context, removeOnExternalUninstall, _) =>
-                  ListItemTheme.withData(
+                  ListItemTheme.mergeWithData(
                     data: removeOnExternalUninstall
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -910,7 +917,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.parallelDownloads,
               builder: (context, parallelDownloads, _) =>
-                  ListItemTheme.withData(
+                  ListItemTheme.mergeWithData(
                     data: parallelDownloads
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -951,7 +958,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.beforeNewInstallsShareToAppVerifier,
               builder: (context, beforeNewInstallsShareToAppVerifier, _) =>
-                  ListItemTheme.withData(
+                  ListItemTheme.mergeWithData(
                     data: beforeNewInstallsShareToAppVerifier
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -1013,7 +1020,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Selector<SettingsProvider, bool>(
               selector: (context, settingsProvider) =>
                   settingsProvider.useShizuku,
-              builder: (context, useShizuku, _) => ListItemTheme.withData(
+              builder: (context, useShizuku, _) => ListItemTheme.mergeWithData(
                 data: useShizuku
                     ? selectedListItemTheme
                     : unselectedListItemTheme,
@@ -1047,7 +1054,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.shizukuPretendToBeGooglePlay,
               builder: (context, shizukuPretendToBeGooglePlay, _) =>
-                  ListItemTheme.withData(
+                  ListItemTheme.mergeWithData(
                     data: shizukuPretendToBeGooglePlay
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -1198,7 +1205,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     : null;
                 final contentColor = isDisabled ? disabledContentColor : null;
                 final textStyle = TextStyle(color: contentColor);
-                return ListItemTheme.withData(
+                return ListItemTheme.mergeWithData(
                   data: useMaterialYou
                       ? selectedListItemTheme
                       : unselectedListItemTheme,
@@ -1251,7 +1258,7 @@ class _SettingsPageState extends State<SettingsPage> {
               builder: (context, useBlackTheme, _) {
                 useBlackTheme = useBlackTheme && !isDisabled;
                 final textStyle = TextStyle(color: contentColor);
-                return ListItemTheme.withData(
+                return ListItemTheme.mergeWithData(
                   data: useBlackTheme
                       ? selectedListItemTheme
                       : unselectedListItemTheme,
@@ -1307,7 +1314,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 valueListenable: _settings.themeColor,
                 builder: (context, themeColor, _) {
                   final isSelected = themeColor != obtainiumThemeColor;
-                  return ListItemTheme.withData(
+                  return ListItemTheme.mergeWithData(
                     data: !isDisabled && isSelected
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -1775,7 +1782,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.showAppWebpage,
-          builder: (context, showAppWebpage, _) => ListItemTheme.withData(
+          builder: (context, showAppWebpage, _) => ListItemTheme.mergeWithData(
             data: showAppWebpage
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1809,7 +1816,7 @@ class _SettingsPageState extends State<SettingsPage> {
         key: const ValueKey("pinUpdates"),
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) => settingsProvider.pinUpdates,
-          builder: (context, pinUpdates, _) => ListItemTheme.withData(
+          builder: (context, pinUpdates, _) => ListItemTheme.mergeWithData(
             data: pinUpdates ? selectedListItemTheme : unselectedListItemTheme,
             child: ListItemContainer(
               child: MergeSemantics(
@@ -1841,33 +1848,34 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.buryNonInstalled,
-          builder: (context, buryNonInstalled, _) => ListItemTheme.withData(
-            data: buryNonInstalled
-                ? selectedListItemTheme
-                : unselectedListItemTheme,
-            child: ListItemContainer(
-              child: MergeSemantics(
-                child: ListItemInteraction(
-                  onTap: () =>
-                      _settingsProvider.buryNonInstalled = !buryNonInstalled,
-                  child: ListItemLayout(
-                    padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                    trailingPadding: const .symmetric(
-                      vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                    ),
-                    headline: Text(tr("moveNonInstalledAppsToBottom")),
-                    trailing: ExcludeFocus(
-                      child: Switch(
-                        onCheckedChanged: (value) =>
-                            _settingsProvider.buryNonInstalled = value,
-                        checked: buryNonInstalled,
+          builder: (context, buryNonInstalled, _) =>
+              ListItemTheme.mergeWithData(
+                data: buryNonInstalled
+                    ? selectedListItemTheme
+                    : unselectedListItemTheme,
+                child: ListItemContainer(
+                  child: MergeSemantics(
+                    child: ListItemInteraction(
+                      onTap: () => _settingsProvider.buryNonInstalled =
+                          !buryNonInstalled,
+                      child: ListItemLayout(
+                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                        trailingPadding: const .symmetric(
+                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                        ),
+                        headline: Text(tr("moveNonInstalledAppsToBottom")),
+                        trailing: ExcludeFocus(
+                          child: Switch(
+                            onCheckedChanged: (value) =>
+                                _settingsProvider.buryNonInstalled = value,
+                            checked: buryNonInstalled,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
         ),
       ),
       verticalSpace,
@@ -1876,7 +1884,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.groupByCategory,
-          builder: (context, groupByCategory, _) => ListItemTheme.withData(
+          builder: (context, groupByCategory, _) => ListItemTheme.mergeWithData(
             data: groupByCategory
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1911,33 +1919,34 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.hideTrackOnlyWarning,
-          builder: (context, hideTrackOnlyWarning, _) => ListItemTheme.withData(
-            data: _settingsProvider.hideTrackOnlyWarning
-                ? selectedListItemTheme
-                : unselectedListItemTheme,
-            child: ListItemContainer(
-              child: MergeSemantics(
-                child: ListItemInteraction(
-                  onTap: () => _settingsProvider.hideTrackOnlyWarning =
-                      !hideTrackOnlyWarning,
-                  child: ListItemLayout(
-                    padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                    trailingPadding: const .symmetric(
-                      vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                    ),
-                    headline: Text(tr("dontShowTrackOnlyWarnings")),
-                    trailing: ExcludeFocus(
-                      child: Switch(
-                        onCheckedChanged: (value) =>
-                            _settingsProvider.hideTrackOnlyWarning = value,
-                        checked: hideTrackOnlyWarning,
+          builder: (context, hideTrackOnlyWarning, _) =>
+              ListItemTheme.mergeWithData(
+                data: _settingsProvider.hideTrackOnlyWarning
+                    ? selectedListItemTheme
+                    : unselectedListItemTheme,
+                child: ListItemContainer(
+                  child: MergeSemantics(
+                    child: ListItemInteraction(
+                      onTap: () => _settingsProvider.hideTrackOnlyWarning =
+                          !hideTrackOnlyWarning,
+                      child: ListItemLayout(
+                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                        trailingPadding: const .symmetric(
+                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                        ),
+                        headline: Text(tr("dontShowTrackOnlyWarnings")),
+                        trailing: ExcludeFocus(
+                          child: Switch(
+                            onCheckedChanged: (value) =>
+                                _settingsProvider.hideTrackOnlyWarning = value,
+                            checked: hideTrackOnlyWarning,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
         ),
       ),
       verticalSpace,
@@ -1946,34 +1955,35 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.hideAPKOriginWarning,
-          builder: (context, hideAPKOriginWarning, _) => ListItemTheme.withData(
-            data: hideAPKOriginWarning
-                ? selectedListItemTheme
-                : unselectedListItemTheme,
-            child: ListItemContainer(
-              isLast: true,
-              child: MergeSemantics(
-                child: ListItemInteraction(
-                  onTap: () => _settingsProvider.hideAPKOriginWarning =
-                      !hideAPKOriginWarning,
-                  child: ListItemLayout(
-                    padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                    trailingPadding: const .symmetric(
-                      vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                    ),
-                    headline: Text(tr("dontShowAPKOriginWarnings")),
-                    trailing: ExcludeFocus(
-                      child: Switch(
-                        onCheckedChanged: (value) =>
-                            _settingsProvider.hideAPKOriginWarning = value,
-                        checked: hideAPKOriginWarning,
+          builder: (context, hideAPKOriginWarning, _) =>
+              ListItemTheme.mergeWithData(
+                data: hideAPKOriginWarning
+                    ? selectedListItemTheme
+                    : unselectedListItemTheme,
+                child: ListItemContainer(
+                  isLast: true,
+                  child: MergeSemantics(
+                    child: ListItemInteraction(
+                      onTap: () => _settingsProvider.hideAPKOriginWarning =
+                          !hideAPKOriginWarning,
+                      child: ListItemLayout(
+                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                        trailingPadding: const .symmetric(
+                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                        ),
+                        headline: Text(tr("dontShowAPKOriginWarnings")),
+                        trailing: ExcludeFocus(
+                          child: Switch(
+                            onCheckedChanged: (value) =>
+                                _settingsProvider.hideAPKOriginWarning = value,
+                            checked: hideAPKOriginWarning,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
         ),
       ),
       const SizedBox(height: 16.0),
@@ -1993,7 +2003,7 @@ class _SettingsPageState extends State<SettingsPage> {
       const SizedBox(height: 16.0),
       KeyedSubtree(
         key: const ValueKey("appSource"),
-        child: ListItemTheme.withData(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             isFirst: true,
@@ -2014,7 +2024,7 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("wiki"),
-        child: ListItemTheme.withData(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             child: ListItemInteraction(
@@ -2034,7 +2044,7 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("crowdsourcedConfigs"),
-        child: ListItemTheme.withData(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             child: ListItemInteraction(
@@ -2054,7 +2064,7 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("appLogs"),
-        child: ListItemTheme.withData(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             child: ListItemInteraction(
@@ -2076,7 +2086,7 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("importExport"),
-        child: ListItemTheme.withData(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             isLast: true,
@@ -2151,7 +2161,7 @@ class _SettingsPageState extends State<SettingsPage> {
               //   sliver: SliverList.list(children: listItems),
               // ),
             ),
-            ListItemTheme.withData(
+            ListItemTheme.mergeWithData(
               data: unselectedListItemTheme,
               child: SliverPadding(
                 padding: const .symmetric(horizontal: 8.0),
@@ -2388,7 +2398,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         final contentColor = isDisabled
                             ? disabledContentColor
                             : null;
-                        return ListItemTheme.withData(
+                        return ListItemTheme.mergeWithData(
                           data: unselectedListItemTheme,
                           child: ListItemContainer(
                             isFirst: true,
@@ -2889,7 +2899,7 @@ class _LogsPageState extends State<_LogsPage> {
                 return logs != null
                     ? SliverPadding(
                         padding: const .fromLTRB(8.0, 0.0, 8.0, 16.0),
-                        sliver: ListItemTheme.withData(
+                        sliver: ListItemTheme.mergeWithData(
                           data: CustomThemeFactory.createListItemTheme(
                             colorTheme: colorTheme,
                             elevationTheme: elevationTheme,

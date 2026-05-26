@@ -962,7 +962,7 @@ class _SelectionModalState extends State<SelectionModal> {
         .where((e) => e.value)
         .toList();
 
-    Widget content = ListItemTheme.withData(
+    Widget content = ListItemTheme.mergeWithData(
       data: .from(
         overlineTextStyle: .all(typescaleTheme.labelSmall.toTextStyle()),
         headlineTextStyle: .all(

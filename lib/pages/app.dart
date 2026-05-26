@@ -564,7 +564,7 @@ class _AppPageState extends State<AppPage> {
           baseColor: colorTheme.surfaceContainer,
           highlightColor: colorTheme.surfaceContainerHighest,
         ),
-        child: ListItemTheme.withData(
+        child: ListItemTheme.mergeWithData(
           data: .from(
             containerColor: .all(colorTheme.surface),
             leadingIconTheme: .all(

@@ -127,7 +127,7 @@ class _DeveloperPageState extends State<DeveloperPage> {
               ),
               title: const Text("Developer Options"),
             ),
-            ListItemTheme.withData(
+            ListItemTheme.mergeWithData(
               data: CustomThemeFactory.createListItemTheme(
                 colorTheme: colorTheme,
                 elevationTheme: elevationTheme,
@@ -2240,7 +2240,7 @@ class _Settings2ViewState extends State<Settings2View> {
           //   title: Text("Settings"),
           // ),
           const SettingsAppBar(),
-          ListItemTheme.withData(
+          ListItemTheme.mergeWithData(
             data: const .from(),
             // data: CustomThemeFactory.createListItemTheme(
             //   colorTheme: colorTheme,
@@ -2594,7 +2594,7 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
               ),
               SliverPadding(
                 padding: const .symmetric(horizontal: 8.0),
-                sliver: ListItemTheme.withData(
+                sliver: ListItemTheme.mergeWithData(
                   data:
                       CustomThemeFactory.createListItemTheme(
                         colorTheme: colorTheme,

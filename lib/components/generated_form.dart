@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:materium/flutter.dart';
 import 'package:materium/components/generated_form_modal.dart';
 import 'package:materium/providers/settings_new.dart';
+import 'package:materium/providers/settings_provider.dart';
 import 'package:materium/providers/source_provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:collection/collection.dart';
@@ -273,6 +274,75 @@ int generateRandomNumber(
 bool validateTextField(TextFormField tf) =>
     (tf.key as GlobalKey<FormFieldState>).currentState?.isValid == true;
 
+class _TVTextFieldFocus extends StatefulWidget {
+  final Widget child;
+  final FocusNode textFocusNode;
+
+  const _TVTextFieldFocus({required this.child, required this.textFocusNode});
+
+  @override
+  State<_TVTextFieldFocus> createState() => _TVTextFieldFocusState();
+}
+
+class _TVTextFieldFocusState extends State<_TVTextFieldFocus> {
+  final FocusNode _outerFocus = FocusNode();
+  bool _activated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.textFocusNode.addListener(_onTextFocusChange);
+  }
+
+  void _onTextFocusChange() {
+    if (!widget.textFocusNode.hasFocus && _activated) {
+      setState(() => _activated = false);
+      _outerFocus.requestFocus();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.textFocusNode.removeListener(_onTextFocusChange);
+    _outerFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      focusNode: _outerFocus,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.enter)) {
+          setState(() => _activated = true);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            widget.textFocusNode.requestFocus();
+          });
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: ListenableBuilder(
+        listenable: _outerFocus,
+        builder: (context, child) => Container(
+          decoration: _outerFocus.hasFocus && !_activated
+              ? BoxDecoration(
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                )
+              : null,
+          child: ExcludeFocus(excluding: !_activated, child: widget.child),
+        ),
+      ),
+    );
+  }
+}
+
 class _GeneratedFormState extends State<GeneratedForm> {
   final _formKey = GlobalKey<FormState>();
   Map<String, dynamic> values = {};
@@ -350,6 +420,51 @@ class _GeneratedFormState extends State<GeneratedForm> {
           return TypeAheadField<String>(
             controller: ctrl,
             builder: (context, controller, focusNode) {
+              Widget textField = TextFormField(
+                controller: ctrl,
+                focusNode: focusNode,
+                keyboardType: formItem.textInputType,
+                obscureText: formItem.password,
+                autocorrect: !formItem.password,
+                enableSuggestions: !formItem.password,
+                key: formFieldKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                onChanged: (value) {
+                  setState(() {
+                    values[formItem.key] = value;
+                    someValueChanged();
+                  });
+                },
+                decoration: InputDecoration(
+                  contentPadding: const .symmetric(
+                    horizontal: 16.0,
+                    vertical: (56.0 - 24.0) / 2.0,
+                  ),
+                  helperText: formItem.label + (formItem.required ? ' *' : ''),
+                  hintText: formItem.hint,
+                ),
+                minLines: formItem.max <= 1 ? null : formItem.max,
+                maxLines: formItem.max <= 1 ? 1 : formItem.max,
+                validator: (value) {
+                  if (formItem.required &&
+                      (value == null || value.trim().isEmpty)) {
+                    return '${formItem.label} ${tr('requiredInBrackets')}';
+                  }
+                  for (final validator in formItem.additionalValidators) {
+                    final String? result = validator(value);
+                    if (result != null) {
+                      return result;
+                    }
+                  }
+                  return null;
+                },
+              );
+              if (context.read<SettingsProvider>().isTv) {
+                textField = _TVTextFieldFocus(
+                  textFocusNode: focusNode,
+                  child: textField,
+                );
+              }
               return ValueListenableBuilder(
                 valueListenable: _textFieldTypeNotifier,
                 builder: (context, textFieldType, child) =>
@@ -359,48 +474,9 @@ class _GeneratedFormState extends State<GeneratedForm> {
                         textFieldType: _textFieldTypeNotifier.value,
                         hasLabelText: false,
                       ),
-                      child: child!,
+                      child: child,
                     ),
-                child: TextFormField(
-                  controller: ctrl,
-                  focusNode: focusNode,
-                  keyboardType: formItem.textInputType,
-                  obscureText: formItem.password,
-                  autocorrect: !formItem.password,
-                  enableSuggestions: !formItem.password,
-                  key: formFieldKey,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  onChanged: (value) {
-                    setState(() {
-                      values[formItem.key] = value;
-                      someValueChanged();
-                    });
-                  },
-                  decoration: InputDecoration(
-                    contentPadding: const .symmetric(
-                      horizontal: 16.0,
-                      vertical: (56.0 - 24.0) / 2.0,
-                    ),
-                    helperText:
-                        formItem.label + (formItem.required ? ' *' : ''),
-                    hintText: formItem.hint,
-                  ),
-                  minLines: formItem.max <= 1 ? null : formItem.max,
-                  maxLines: formItem.max <= 1 ? 1 : formItem.max,
-                  validator: (value) {
-                    if (formItem.required &&
-                        (value == null || value.trim().isEmpty)) {
-                      return '${formItem.label} ${tr('requiredInBrackets')}';
-                    }
-                    for (final validator in formItem.additionalValidators) {
-                      final String? result = validator(value);
-                      if (result != null) {
-                        return result;
-                      }
-                    }
-                    return null;
-                  },
-                ),
+                child: textField,
               );
             },
             itemBuilder: (context, value) {
@@ -510,17 +586,17 @@ class _GeneratedFormState extends State<GeneratedForm> {
     }
     for (var r = 0; r < formInputs.length; r++) {
       for (var e = 0; e < formInputs[r].length; e++) {
-        final fieldKey = widget.items[r][e].key;
-        if (widget.items[r][e] is GeneratedFormSwitch) {
+        final item = widget.items[r][e];
+        String fieldKey = item.key;
+        if (item is GeneratedFormSwitch) {
           formInputs[r][e] = Flex.horizontal(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible.loose(child: Text(widget.items[r][e].label)),
+              Flexible.loose(child: Text(item.label)),
               const SizedBox(width: 8),
               Switch(
                 checked: values[fieldKey],
-                onCheckedChanged:
-                    (widget.items[r][e] as GeneratedFormSwitch).disabled
+                onCheckedChanged: item.disabled
                     ? null
                     : (value) {
                         setState(() {
@@ -531,13 +607,13 @@ class _GeneratedFormState extends State<GeneratedForm> {
               ),
             ],
           );
-        } else if (widget.items[r][e] is GeneratedFormTagInput) {
+        } else if (item is GeneratedFormTagInput) {
           void onAddPressed() {
             showDialog<Map<String, dynamic>?>(
               context: context,
               builder: (ctx) {
                 return GeneratedFormModal(
-                  title: widget.items[r][e].label,
+                  title: item.label,
                   items: [
                     [GeneratedFormTextField('label', label: tr('label'))],
                   ],
@@ -551,9 +627,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                       values[fieldKey] as Map<String, MapEntry<int, bool>>?;
                   temp ??= {};
                   if (temp[label] == null) {
-                    final singleSelect =
-                        (widget.items[r][e] as GeneratedFormTagInput)
-                            .singleSelect;
+                    final singleSelect = item.singleSelect;
                     final someSelected = temp.entries
                         .where((element) => element.value.value)
                         .isNotEmpty;
@@ -575,22 +649,15 @@ class _GeneratedFormState extends State<GeneratedForm> {
               if ((values[fieldKey] as Map<String, MapEntry<int, bool>>?)
                           ?.isNotEmpty ==
                       true &&
-                  (widget.items[r][e] as GeneratedFormTagInput)
-                      .showLabelWhenNotEmpty)
+                  item.showLabelWhenNotEmpty)
                 Flex.vertical(
-                  crossAxisAlignment:
-                      (widget.items[r][e] as GeneratedFormTagInput).alignment ==
-                          WrapAlignment.center
+                  crossAxisAlignment: item.alignment == WrapAlignment.center
                       ? CrossAxisAlignment.center
                       : CrossAxisAlignment.stretch,
-                  children: [
-                    Text(widget.items[r][e].label),
-                    const SizedBox(height: 8),
-                  ],
+                  children: [Text(item.label), const SizedBox(height: 8)],
                 ),
               Wrap(
-                alignment:
-                    (widget.items[r][e] as GeneratedFormTagInput).alignment,
+                alignment: item.alignment,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: 18.0,
                 runSpacing: 0.0,
@@ -605,144 +672,98 @@ class _GeneratedFormState extends State<GeneratedForm> {
                   //     : const SizedBox.shrink(),
                   // TODO: get rid of category colors across the app
                   // TODO: make categories be tags
-                  ...(values[fieldKey] as Map<String, MapEntry<int, bool>>?)
-                          ?.entries
-                          .map((e2) {
-                            final isSelected = e2.value.value;
-                            return FilledButton(
-                              style: LegacyThemeFactory.createButtonStyle(
-                                colorTheme: colorTheme,
-                                elevationTheme: elevationTheme,
-                                shapeTheme: shapeTheme,
-                                stateTheme: stateTheme,
-                                typescaleTheme: typescaleTheme,
-                                size: .extraSmall,
-                                color: useBlackTheme ? .tonal : .filled,
-                                isSelected: isSelected,
-                                unselectedContainerColor: useBlackTheme
-                                    ? colorTheme.surfaceContainer
-                                    : colorTheme.surfaceContainer,
-                                unselectedContentColor: useBlackTheme
-                                    ? colorTheme.onSurface
-                                    : colorTheme.onSurfaceVariant,
-                                selectedContainerColor: useBlackTheme
-                                    ? colorTheme.primaryContainer
-                                    : colorTheme.tertiaryContainer,
-                                selectedContentColor: useBlackTheme
-                                    ? colorTheme.onPrimaryContainer
-                                    : colorTheme.onTertiaryContainer,
-                              ),
-                              onPressed: () {
-                                final value = !isSelected;
-                                setState(() {
-                                  (values[fieldKey]
-                                      as Map<String, MapEntry<int, bool>>)[e2
-                                      .key] = MapEntry(
-                                    (values[fieldKey]
-                                            as Map<
-                                              String,
-                                              MapEntry<int, bool>
-                                            >)[e2.key]!
-                                        .key,
-                                    value,
-                                  );
-                                  if ((widget.items[r][e]
-                                              as GeneratedFormTagInput)
-                                          .singleSelect &&
-                                      value == true) {
-                                    for (final key
-                                        in (values[fieldKey]
-                                                as Map<
-                                                  String,
-                                                  MapEntry<int, bool>
-                                                >)
-                                            .keys) {
-                                      if (key != e2.key) {
-                                        (values[fieldKey]
-                                            as Map<
-                                              String,
-                                              MapEntry<int, bool>
-                                            >)[key] = MapEntry(
-                                          (values[fieldKey]
-                                                  as Map<
-                                                    String,
-                                                    MapEntry<int, bool>
-                                                  >)[key]!
-                                              .key,
-                                          false,
-                                        );
-                                      }
-                                    }
-                                  }
-                                  someValueChanged();
-                                });
-                              },
-                              child: Text(
-                                e2.key,
-                                maxLines: 2,
-                                overflow: .ellipsis,
+                  ...() sync* {
+                        final tagEntries =
+                            values[fieldKey]
+                                as Map<String, MapEntry<int, bool>>?;
+                        if (tagEntries != null) {
+                          final sorted = tagEntries.entries.toList()
+                            ..sort(
+                              (a, b) => a.key.toLowerCase().compareTo(
+                                b.key.toLowerCase(),
                               ),
                             );
-                            // return Padding(
-                            //   padding: const EdgeInsets.symmetric(
-                            //     horizontal: 4,
-                            //   ),
-                            //   child: ChoiceChip(
-                            //     label: Text(e2.key),
-                            //     backgroundColor: Color(
-                            //       e2.value.key,
-                            //     ).withAlpha(50),
-                            //     selectedColor: Color(e2.value.key),
-                            //     visualDensity: VisualDensity.compact,
-                            //     selected: e2.value.value,
-                            // onSelected: (value) {
-                            //   setState(() {
-                            //     (values[fieldKey]
-                            //         as Map<String, MapEntry<int, bool>>)[e2
-                            //         .key] = MapEntry(
-                            //       (values[fieldKey]
-                            //               as Map<
-                            //                 String,
-                            //                 MapEntry<int, bool>
-                            //               >)[e2.key]!
-                            //           .key,
-                            //       value,
-                            //     );
-                            //     if ((widget.items[r][e]
-                            //                 as GeneratedFormTagInput)
-                            //             .singleSelect &&
-                            //         value == true) {
-                            //       for (var key
-                            //           in (values[fieldKey]
-                            //                   as Map<
-                            //                     String,
-                            //                     MapEntry<int, bool>
-                            //                   >)
-                            //               .keys) {
-                            //         if (key != e2.key) {
-                            //           (values[fieldKey]
-                            //               as Map<
-                            //                 String,
-                            //                 MapEntry<int, bool>
-                            //               >)[key] = MapEntry(
-                            //             (values[fieldKey]
-                            //                     as Map<
-                            //                       String,
-                            //                       MapEntry<int, bool>
-                            //                     >)[key]!
-                            //                 .key,
-                            //             false,
-                            //           );
-                            //         }
-                            //       }
-                            //     }
-                            //     someValueChanged();
-                            //   });
-                            // },
-                            //   ),
-                            // );
-                          }) ??
-                      [const SizedBox.shrink()],
+                          yield* sorted;
+                        }
+                      }().map((e2) {
+                        final isSelected = e2.value.value;
+                        return Button(
+                          style: .from(
+                            containerColor: .resolveWith(
+                              (states) => switch (states) {
+                                ButtonDisabledStates() => null,
+                                ToggleButtonStates(isSelected: true) =>
+                                  useBlackTheme
+                                      ? colorTheme.primaryContainer
+                                      : colorTheme.tertiaryContainer,
+                                _ =>
+                                  useBlackTheme
+                                      ? colorTheme.surfaceContainer
+                                      : colorTheme.surfaceContainer,
+                              },
+                            ),
+                            labelTextStyle: .resolveWith(
+                              (states) => .new(
+                                color: switch (states) {
+                                  ButtonDisabledStates() => null,
+                                  ToggleButtonStates(isSelected: true) =>
+                                    useBlackTheme
+                                        ? colorTheme.onPrimaryContainer
+                                        : colorTheme.onTertiaryContainer,
+                                  _ =>
+                                    useBlackTheme
+                                        ? colorTheme.onSurface
+                                        : colorTheme.onSurfaceVariant,
+                                },
+                              ),
+                            ),
+                          ),
+                          settings: .new(
+                            size: .extraSmall,
+                            color: useBlackTheme ? .tonal : .filled,
+                          ),
+                          isSelected: isSelected,
+                          onTap: () {
+                            final value = !isSelected;
+                            setState(() {
+                              (values[fieldKey]
+                                  as Map<String, MapEntry<int, bool>>)[e2
+                                  .key] = MapEntry(
+                                (values[fieldKey]
+                                        as Map<String, MapEntry<int, bool>>)[e2
+                                        .key]!
+                                    .key,
+                                value,
+                              );
+                              if (item.singleSelect && value) {
+                                for (final key
+                                    in (values[fieldKey]
+                                            as Map<String, MapEntry<int, bool>>)
+                                        .keys) {
+                                  if (key != e2.key) {
+                                    (values[fieldKey]
+                                        as Map<
+                                          String,
+                                          MapEntry<int, bool>
+                                        >)[key] = MapEntry(
+                                      (values[fieldKey]
+                                              as Map<
+                                                String,
+                                                MapEntry<int, bool>
+                                              >)[key]!
+                                          .key,
+                                      false,
+                                    );
+                                  }
+                                }
+                              }
+                              someValueChanged();
+                            });
+                          },
+                          label: Text(e2.key, maxLines: 2, overflow: .ellipsis),
+                        );
+                      }) ??
+                      const [SizedBox.shrink()],
                 ],
               ),
               Flex.horizontal(
@@ -760,50 +781,65 @@ class _GeneratedFormState extends State<GeneratedForm> {
                       1)
                     Padding(
                       padding: const .directional(end: 18.0 - 4.0 - 4.0),
-                      child: IconButton(
-                        style: LegacyThemeFactory.createIconButtonStyle(
-                          colorTheme: colorTheme,
-                          elevationTheme: elevationTheme,
-                          shapeTheme: shapeTheme,
-                          stateTheme: stateTheme,
-                          color: .standard,
-                          size: .extraSmall,
-                          width: .wide,
-                          containerColor: useBlackTheme
-                              ? colorTheme.surfaceContainer
-                              : colorTheme.surfaceContainer,
-                          iconColor: useBlackTheme
-                              ? colorTheme.primary
-                              : colorTheme.onSurfaceVariant,
+                      child: Tooltip(
+                        message: tr("colour"),
+                        child: IconButton(
+                          style: .from(
+                            containerColor: .resolveWith(
+                              (states) => switch (states) {
+                                ButtonDisabledStates() => null,
+                                _ =>
+                                  useBlackTheme
+                                      ? colorTheme.surfaceContainer
+                                      : colorTheme.surfaceContainer,
+                              },
+                            ),
+                            iconTheme: .resolveWith(
+                              (states) => .from(
+                                color: switch (states) {
+                                  ButtonDisabledStates() => null,
+                                  _ =>
+                                    useBlackTheme
+                                        ? colorTheme.primary
+                                        : colorTheme.onSurfaceVariant,
+                                },
+                              ),
+                            ),
+                          ),
+                          settings: const .new(
+                            color: .standard,
+                            size: .extraSmall,
+                            width: .wide,
+                          ),
+                          onTap: () {
+                            setState(() {
+                              final temp =
+                                  values[fieldKey]
+                                      as Map<String, MapEntry<int, bool>>;
+                              // get selected category str where bool is true
+                              final oldEntry = temp.entries.firstWhere(
+                                (entry) => entry.value.value,
+                              );
+                              // generate new color, ensure it is not the same
+                              int newColor = oldEntry.value.key;
+                              while (oldEntry.value.key == newColor) {
+                                newColor = generateRandomLightColor()
+                                    .toARGB32();
+                              }
+                              // Update entry with new color, remain selected
+                              temp.update(
+                                oldEntry.key,
+                                (old) => MapEntry(newColor, old.value),
+                              );
+                              values[fieldKey] = temp;
+                              someValueChanged();
+                            });
+                          },
+                          icon: const Icon(
+                            Symbols.format_color_fill_rounded,
+                            opticalSize: 20.0,
+                          ),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            final temp =
-                                values[fieldKey]
-                                    as Map<String, MapEntry<int, bool>>;
-                            // get selected category str where bool is true
-                            final oldEntry = temp.entries.firstWhere(
-                              (entry) => entry.value.value,
-                            );
-                            // generate new color, ensure it is not the same
-                            int newColor = oldEntry.value.key;
-                            while (oldEntry.value.key == newColor) {
-                              newColor = generateRandomLightColor().toARGB32();
-                            }
-                            // Update entry with new color, remain selected
-                            temp.update(
-                              oldEntry.key,
-                              (old) => MapEntry(newColor, old.value),
-                            );
-                            values[fieldKey] = temp;
-                            someValueChanged();
-                          });
-                        },
-                        icon: const Icon(
-                          Symbols.format_color_fill_rounded,
-                          opticalSize: 20.0,
-                        ),
-                        tooltip: tr("colour"),
                       ),
                     ),
                   if ((values[fieldKey] as Map<String, MapEntry<int, bool>>?)
@@ -813,127 +849,184 @@ class _GeneratedFormState extends State<GeneratedForm> {
                       true)
                     Padding(
                       padding: const .directional(end: 18.0 - 4.0 - 4.0),
-                      child: IconButton(
-                        style: LegacyThemeFactory.createIconButtonStyle(
-                          colorTheme: colorTheme,
-                          elevationTheme: elevationTheme,
-                          shapeTheme: shapeTheme,
-                          stateTheme: stateTheme,
-                          color: .tonal,
-                          size: .extraSmall,
-                          width: .wide,
-                          containerColor: useBlackTheme
-                              ? colorTheme.surfaceContainer
-                              : colorTheme.surfaceContainer,
-                          iconColor: useBlackTheme
-                              ? colorTheme.primary
-                              : colorTheme.onSurfaceVariant,
-                        ),
-                        onPressed: () {
-                          void fn() {
-                            setState(() {
-                              final temp =
-                                  values[fieldKey]
-                                        as Map<String, MapEntry<int, bool>>
-                                    ..removeWhere((key, value) => value.value);
-                              values[fieldKey] = temp;
-                              someValueChanged();
-                            });
-                          }
-
-                          if ((widget.items[r][e] as GeneratedFormTagInput)
-                                  .deleteConfirmationMessage !=
-                              null) {
-                            final message =
-                                (widget.items[r][e] as GeneratedFormTagInput)
-                                    .deleteConfirmationMessage!;
-                            showDialog<Map<String, dynamic>?>(
-                              context: context,
-                              builder: (ctx) {
-                                return GeneratedFormModal(
-                                  title: message.key,
-                                  message: message.value,
-                                  items: const [],
-                                );
+                      child: Tooltip(
+                        message: tr("remove"),
+                        child: IconButton(
+                          style: .from(
+                            containerColor: .resolveWith(
+                              (states) => switch (states) {
+                                ButtonDisabledStates() => null,
+                                _ =>
+                                  useBlackTheme
+                                      ? colorTheme.surfaceContainer
+                                      : colorTheme.surfaceContainer,
                               },
-                            ).then((value) {
-                              if (value != null) {
-                                fn();
-                              }
-                            });
-                          } else {
-                            fn();
-                          }
-                        },
-                        icon: const Icon(
-                          Symbols.remove_rounded,
-                          opticalSize: 20.0,
+                            ),
+                            iconTheme: .resolveWith(
+                              (states) => .from(
+                                color: switch (states) {
+                                  ButtonDisabledStates() => null,
+                                  _ =>
+                                    useBlackTheme
+                                        ? colorTheme.primary
+                                        : colorTheme.onSurfaceVariant,
+                                },
+                              ),
+                            ),
+                          ),
+                          settings: const .new(
+                            color: .standard,
+                            size: .extraSmall,
+                            width: .wide,
+                          ),
+                          onTap: () {
+                            void fn() {
+                              setState(() {
+                                final temp =
+                                    values[fieldKey]
+                                          as Map<String, MapEntry<int, bool>>
+                                      ..removeWhere(
+                                        (key, value) => value.value,
+                                      );
+                                values[fieldKey] = temp;
+                                someValueChanged();
+                              });
+                            }
+
+                            if (item.deleteConfirmationMessage != null) {
+                              final message = item.deleteConfirmationMessage!;
+                              showDialog<Map<String, dynamic>?>(
+                                context: context,
+                                builder: (ctx) {
+                                  return GeneratedFormModal(
+                                    title: message.key,
+                                    message: message.value,
+                                    items: const [],
+                                  );
+                                },
+                              ).then((value) {
+                                if (value != null) {
+                                  fn();
+                                }
+                              });
+                            } else {
+                              fn();
+                            }
+                          },
+                          icon: const Icon(
+                            Symbols.remove_rounded,
+                            opticalSize: 20.0,
+                          ),
                         ),
-                        tooltip: tr("remove"),
                       ),
                     ),
                   if ((values[fieldKey] as Map<String, MapEntry<int, bool>>?)
                           ?.isEmpty ==
                       true)
-                    FilledButton(
-                      style: LegacyThemeFactory.createButtonStyle(
-                        colorTheme: colorTheme,
-                        elevationTheme: elevationTheme,
-                        shapeTheme: shapeTheme,
-                        stateTheme: stateTheme,
-                        typescaleTheme: typescaleTheme,
-                        size: .extraSmall,
-                        shape: .square,
-                        containerColor: useBlackTheme
-                            ? colorTheme.surfaceContainer
-                            : colorTheme.surfaceContainer,
-                        contentColor: useBlackTheme
-                            ? colorTheme.primary
-                            : colorTheme.onSurfaceVariant,
-                      ),
-                      onPressed: onAddPressed,
-                      child: Flex.horizontal(
-                        spacing: 4.0,
-                        children: [
-                          const Icon(Symbols.add_rounded, opticalSize: 20.0),
-                          Text(
-                            (widget.items[r][e] as GeneratedFormTagInput).label,
-                            maxLines: 2,
-                            overflow: .ellipsis,
+                    Button(
+                      // style: LegacyThemeFactory.createButtonStyle(
+                      //   colorTheme: colorTheme,
+                      //   elevationTheme: elevationTheme,
+                      //   shapeTheme: shapeTheme,
+                      //   stateTheme: stateTheme,
+                      //   typescaleTheme: typescaleTheme,
+                      //   size: .extraSmall,
+                      //   shape: .square,
+                      //   containerColor: useBlackTheme
+                      //       ? colorTheme.surfaceContainer
+                      //       : colorTheme.surfaceContainer,
+                      //   contentColor: useBlackTheme
+                      //       ? colorTheme.primary
+                      //       : colorTheme.onSurfaceVariant,
+                      // ),
+                      style: .from(
+                        containerColor: .resolveWith(
+                          (states) => switch (states) {
+                            ButtonDisabledStates() => null,
+                            _ =>
+                              useBlackTheme
+                                  ? colorTheme.surfaceContainer
+                                  : colorTheme.surfaceContainer,
+                          },
+                        ),
+                        stateLayerColor: .all(
+                          useBlackTheme
+                              ? colorTheme.primary
+                              : colorTheme.onSurfaceVariant,
+                        ),
+                        iconTheme: .resolveWith(
+                          (states) => .from(
+                            color: switch (states) {
+                              ButtonDisabledStates() => null,
+                              _ =>
+                                useBlackTheme
+                                    ? colorTheme.primary
+                                    : colorTheme.onSurfaceVariant,
+                            },
                           ),
-                        ],
+                        ),
+                        labelTextStyle: .resolveWith(
+                          (states) => .new(
+                            color: switch (states) {
+                              ButtonDisabledStates() => null,
+                              _ =>
+                                useBlackTheme
+                                    ? colorTheme.primary
+                                    : colorTheme.onSurfaceVariant,
+                            },
+                          ),
+                        ),
                       ),
+                      settings: const .new(size: .extraSmall, shape: .square),
+                      onTap: onAddPressed,
+                      icon: const Icon(Symbols.add_rounded),
+                      label: Text(item.label, maxLines: 2, overflow: .ellipsis),
                     )
                   else
-                    IconButton(
-                      style: LegacyThemeFactory.createIconButtonStyle(
-                        colorTheme: colorTheme,
-                        elevationTheme: elevationTheme,
-                        shapeTheme: shapeTheme,
-                        stateTheme: stateTheme,
-                        color: .standard,
-                        size: .extraSmall,
-                        width: .wide,
-                        containerColor: useBlackTheme
-                            ? colorTheme.surfaceContainer
-                            : colorTheme.surfaceContainer,
-                        iconColor: useBlackTheme
-                            ? colorTheme.primary
-                            : colorTheme.onSurfaceVariant,
+                    Tooltip(
+                      message: tr("add"),
+                      child: IconButton(
+                        style: .from(
+                          containerColor: .resolveWith(
+                            (states) => switch (states) {
+                              ButtonDisabledStates() => null,
+                              _ =>
+                                useBlackTheme
+                                    ? colorTheme.surfaceContainer
+                                    : colorTheme.surfaceContainer,
+                            },
+                          ),
+                          iconTheme: .resolveWith(
+                            (states) => .from(
+                              color: switch (states) {
+                                ButtonDisabledStates() => null,
+                                _ =>
+                                  useBlackTheme
+                                      ? colorTheme.primary
+                                      : colorTheme.onSurfaceVariant,
+                              },
+                            ),
+                          ),
+                        ),
+                        settings: const .new(
+                          color: .standard,
+                          size: .extraSmall,
+                          width: .wide,
+                        ),
+                        onTap: onAddPressed,
+                        icon: const Icon(
+                          Symbols.add_rounded,
+                          opticalSize: 20.0,
+                        ),
                       ),
-                      onPressed: onAddPressed,
-                      icon: const Icon(Symbols.add_rounded, opticalSize: 20.0),
-                      tooltip: tr("add"),
                     ),
                 ],
               ),
             ],
           );
-        } else if (widget.items[r][e] is GeneratedFormSubForm) {
+        } else if (item is GeneratedFormSubForm) {
           final List<Widget> subformColumn = [];
-          final compact =
-              (widget.items[r][e] as GeneratedFormSubForm).items.length == 1 &&
-              (widget.items[r][e] as GeneratedFormSubForm).items[0].length == 1;
+          final compact = item.items.length == 1 && item.items[0].length == 1;
           for (var i = 0; i < values[fieldKey].length; i++) {
             final internalFormKey = ValueKey(
               generateRandomNumber(
@@ -949,26 +1042,21 @@ class _GeneratedFormState extends State<GeneratedForm> {
                   if (!compact) const SizedBox(height: 16),
                   if (!compact)
                     Text(
-                      '${(widget.items[r][e] as GeneratedFormSubForm).label} (${i + 1})',
+                      '${item.label} (${i + 1})',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   GeneratedForm(
                     key: internalFormKey,
-                    items:
-                        cloneFormItems(
-                              (widget.items[r][e] as GeneratedFormSubForm)
-                                  .items,
-                            )
-                            .map(
-                              (x) => x.map((y) {
-                                y
-                                  ..defaultValue = values[fieldKey]?[i]?[y.key]
-                                  ..key =
-                                      '${y.key.toString()},$internalFormKey';
-                                return y;
-                              }).toList(),
-                            )
-                            .toList(),
+                    items: cloneFormItems(item.items)
+                        .map(
+                          (x) => x.map((y) {
+                            y
+                              ..defaultValue = values[fieldKey]?[i]?[y.key]
+                              ..key = '${y.key.toString()},$internalFormKey';
+                            return y;
+                          }).toList(),
+                        )
+                        .toList(),
                     onValueChanges: (values, valid, isBuilding) {
                       values = values.map(
                         (key, value) => MapEntry(key.split(',')[0], value),
@@ -995,7 +1083,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                 someValueChanged();
                               }
                             : null,
-                        style: ButtonStyle(
+                        style: ButtonStyleLegacy(
                           animationDuration: Duration.zero,
                           elevation: const WidgetStatePropertyAll(0.0),
                           shadowColor: WidgetStateColor.transparent,
@@ -1014,8 +1102,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
                           ),
                           iconSize: const WidgetStatePropertyAll(20.0),
                           shape: WidgetStatePropertyAll(
-                            CornersBorder.rounded(
-                              corners: Corners.all(shapeTheme.corner.medium),
+                            shapeTheme.applyCorner(
+                              corner: shapeTheme.cornerMedium,
                             ),
                           ),
                           overlayColor: WidgetStateLayerColor(
@@ -1038,7 +1126,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                         ),
                         icon: const Icon(Symbols.delete_rounded, fill: 0),
                         label: Text(
-                          '${(widget.items[r][e] as GeneratedFormSubForm).label} (${i + 1})',
+                          '${item.label} (${i + 1})',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1058,14 +1146,12 @@ class _GeneratedFormState extends State<GeneratedForm> {
                     child: FilledButton.icon(
                       onPressed: () {
                         values[fieldKey].add(
-                          getDefaultValuesFromFormItems(
-                            (widget.items[r][e] as GeneratedFormSubForm).items,
-                          ),
+                          getDefaultValuesFromFormItems(item.items),
                         );
                         forceUpdateKeyCount++;
                         someValueChanged();
                       },
-                      style: ButtonStyle(
+                      style: ButtonStyleLegacy(
                         animationDuration: Duration.zero,
                         elevation: const WidgetStatePropertyAll(0.0),
                         shadowColor: WidgetStateColor.transparent,
@@ -1084,9 +1170,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                         ),
                         iconSize: const WidgetStatePropertyAll(20.0),
                         shape: WidgetStatePropertyAll(
-                          CornersBorder.rounded(
-                            corners: Corners.all(shapeTheme.corner.full),
-                          ),
+                          shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
                         ),
                         side: WidgetStatePropertyAll(
                           BorderSide(
@@ -1116,7 +1200,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                       ),
                       icon: const Icon(Symbols.add_rounded),
                       label: Text(
-                        (widget.items[r][e] as GeneratedFormSubForm).label,
+                        item.label,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

@@ -64,7 +64,15 @@ export 'package:flutter/material.dart'
         // ---
         Switch,
         SwitchTheme,
-        SwitchThemeData;
+        SwitchThemeData,
+        /// ---
+        ButtonStyle,
+        IconButton,
+        IconButtonTheme,
+        IconButtonThemeData,
+        FloatingActionButton,
+        FloatingActionButtonTheme,
+        FloatingActionButtonThemeData;
 
 // Third-party packages
 
@@ -72,12 +80,16 @@ export 'package:layout/layout.dart';
 export 'package:material/material.dart';
 export 'package:material/material_symbols.dart';
 export 'package:meta/meta.dart';
+export 'package:motor/motor.dart';
+export 'package:linked_layouts/linked_layouts.dart';
+export 'package:touch_targets/touch_targets.dart';
 
 // Adjacent libraries
 
 export 'assets/assets.gen.dart';
 export 'assets/fonts.dart';
 export 'assets/fonts.gen.dart';
+export 'components/buttons/buttons.dart';
 export 'components/combining_builder.dart';
 export 'components/inverse_center_optically.dart';
 export 'components/list_item.dart';

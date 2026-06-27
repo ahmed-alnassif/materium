@@ -1,9 +1,6 @@
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:materium/flutter.dart';
 
-// ignore: implementation_imports
-import 'package:material/src/material_shapes/material_shapes.dart';
-
 enum CustomCheckboxColor { standard, listItemPhone, listItemWatch, black }
 
 enum CustomRadioButtonColor { standard, listItemPhone, listItemWatch, black }
@@ -558,7 +555,7 @@ abstract final class CustomThemeFactory {
       // containerColor: .all(colorTheme.surfaceBright),
       // headlineTextStyle: .all(
       //   typescaleTheme.titleSmallEmphasized.toTextStyle().copyWith(
-      //     fontFamily: FontFamily.googleSansCode,
+      //     fontFamily: FontFamily.monaspaceArgon,
       //     color: colorTheme.onSurface,
       //   ),
       // ),
@@ -572,12 +569,12 @@ abstract final class CustomThemeFactory {
       containerColor: .all(colorTheme.surface),
       overlineTextStyle: .all(
         typescaleTheme.labelSmall
-            .mergeWith(font: const [FontFamily.googleSansCode])
+            .mergeWith(font: const [FontFamily.monaspaceArgon])
             .toTextStyle(color: colorTheme.onSurfaceVariant),
       ),
       headlineTextStyle: .all(
         typescaleTheme.bodyMedium
-            .mergeWith(font: const [FontFamily.googleSansCode])
+            .mergeWith(font: const [FontFamily.monaspaceArgon])
             .toTextStyle(color: colorTheme.onSurface),
       ),
     ),

@@ -15,7 +15,6 @@ import 'package:materium/providers/settings_new.dart';
 import 'package:materium/providers/settings_provider.dart';
 import 'package:materium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:super_keyboard/super_keyboard.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class AddAppPage extends StatefulWidget {
@@ -83,7 +82,7 @@ class AddAppPageState extends State<AddAppPage> {
                 overrideSource: pickedSourceOverride,
               )
             : null;
-        if (pickedSource.runtimeType != source.runtimeType ||
+        if (pickedSource?.runtimeType != source.runtimeType ||
             overrideChanged ||
             (prevHost != null && prevHost != source?.hosts[0])) {
           pickedSource = source;
@@ -139,6 +138,13 @@ class AddAppPageState extends State<AddAppPage> {
 
     final searchDeselected = context.select<SettingsProvider, List<String>>(
       (settingsProvider) => settingsProvider.searchDeselected,
+    );
+
+    final includePrereleasesByDefault = context.select<SettingsProvider, bool>(
+      (settingsProvider) => settingsProvider.includePrereleasesByDefault,
+    );
+    final shizukuPretendToBeGooglePlay = context.select<SettingsProvider, bool>(
+      (settingsProvider) => settingsProvider.shizukuPretendToBeGooglePlay,
     );
 
     final doingSomething = _adding || _searching;
@@ -330,59 +336,83 @@ class AddAppPageState extends State<AddAppPage> {
                 pickedSource != null &&
                 (pickedSource!.combinedAppSpecificSettingFormItems.isEmpty ||
                     additionalSettingsValid);
-            return IconButton(
-              style: LegacyThemeFactory.createIconButtonStyle(
-                colorTheme: colorTheme,
-                elevationTheme: elevationTheme,
-                shapeTheme: shapeTheme,
-                stateTheme: stateTheme,
-                size: .medium,
-                shape: .square,
-                width: .wide,
+            return Tooltip(
+              message: tr("add"),
+              child: IconButton.custom(
+                // style: LegacyThemeFactory.createIconButtonStyle(
+                //   colorTheme: colorTheme,
+                //   elevationTheme: elevationTheme,
+                //   shapeTheme: shapeTheme,
+                //   stateTheme: stateTheme,
+                //   size: .medium,
+                //   shape: .square,
+                //   width: .wide,
+                //   isSelected: isSelected,
+                //   unselectedContainerColor: colorTheme.primary,
+                //   unselectedIconColor: colorTheme.onPrimary,
+                //   selectedContainerColor: colorTheme.surfaceContainer,
+                //   selectedIconColor: colorTheme.primary,
+                //   // selectedContainerColor: colorTheme.errorContainer,
+                //   // selectedIconColor: colorTheme.onErrorContainer,
+                //   padding: .zero,
+                // ),
+                style: .from(
+                  containerColor: .resolveWith(
+                    (states) => switch (states) {
+                      ButtonDisabledStates() => null,
+                      ToggleButtonStates(isSelected: true) =>
+                        colorTheme.surfaceContainer,
+                      _ => colorTheme.primary,
+                    },
+                  ),
+                  iconTheme: .resolveWith(
+                    (states) => .from(
+                      color: switch (states) {
+                        ButtonDisabledStates() => null,
+                        ToggleButtonStates(isSelected: true) =>
+                          colorTheme.primary,
+                        _ => colorTheme.onPrimary,
+                      },
+                    ),
+                  ),
+                ),
                 isSelected: isSelected,
-                unselectedContainerColor: colorTheme.primary,
-                unselectedIconColor: colorTheme.onPrimary,
-                selectedContainerColor: colorTheme.surfaceContainer,
-                selectedIconColor: colorTheme.primary,
-                // selectedContainerColor: colorTheme.errorContainer,
-                // selectedIconColor: colorTheme.onErrorContainer,
-                padding: .zero,
-              ),
-              onPressed: canAddApp || isSelected
-                  ? () {
-                      if (canAddApp) {
-                        HapticFeedback.selectionClick();
-                        addApp();
+                settings: const .new(
+                  size: .medium,
+                  shape: .square,
+                  width: .wide,
+                ),
+                onTap: canAddApp || isSelected
+                    ? () {
+                        if (canAddApp) {
+                          context.read<SettingsProvider>().selectionClick();
+                          addApp();
+                        }
                       }
-                    }
-                  : null,
-              icon: Stack(
-                fit: .expand,
-                children: [
-                  isSelected
-                      // ? const Icon(Symbols.close_rounded)
-                      ? const Icon(Symbols.add_rounded)
-                      : const Icon(Symbols.add_rounded),
-                  if (isSelected)
-                    Positioned.fill(
-                      child: Align.center(
-                        child: SizedBox.square(
-                          dimension: 40.0,
-                          child: Builder(
-                            builder: (context) => CircularProgressIndicator(
-                              value: null,
-                              padding: .zero,
-                              strokeWidth: 2.0,
-                              backgroundColor: Colors.transparent,
-                              color: IconTheme.of(context).color,
+                    : null,
+                child: Stack(
+                  children: [
+                    const ButtonContent(icon: Icon(Symbols.add_rounded)),
+                    if (isSelected)
+                      Positioned.fill(
+                        child: Align.center(
+                          child: SizedBox.square(
+                            dimension: 40.0,
+                            child: Builder(
+                              builder: (context) => CircularProgressIndicator(
+                                value: null,
+                                padding: .zero,
+                                strokeWidth: 2.0,
+                                backgroundColor: Colors.transparent,
+                                color: IconTheme.of(context).color,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-              tooltip: tr("add"),
             );
           },
         ),
@@ -490,6 +520,8 @@ class AddAppPageState extends State<AddAppPage> {
                   }
                 }),
           )).where((a) => a != null).toList();
+
+          if (!mounted) return;
 
           // Interleave results instead of simple reduce
           final res = <String, MapEntry<String, List<String>>>{};
@@ -636,59 +668,66 @@ class AddAppPageState extends State<AddAppPage> {
           builder: (context) {
             final isSelected = _searching;
             final canSearch = searchQuery.isNotEmpty && !doingSomething;
-            return IconButton(
-              style: LegacyThemeFactory.createIconButtonStyle(
-                colorTheme: colorTheme,
-                elevationTheme: elevationTheme,
-                shapeTheme: shapeTheme,
-                stateTheme: stateTheme,
-                size: .medium,
-                shape: .square,
-                width: .wide,
-                isSelected: _searching,
-                unselectedContainerColor: colorTheme.primary,
-                unselectedIconColor: colorTheme.onPrimary,
-                selectedContainerColor: colorTheme.surfaceContainer,
-                selectedIconColor: colorTheme.primary,
-                // selectedContainerColor: colorTheme.errorContainer,
-                // selectedIconColor: colorTheme.onErrorContainer,
-                padding: .zero,
-              ),
-              onPressed: canSearch || isSelected
-                  ? () {
-                      if (canSearch) {
-                        HapticFeedback.selectionClick();
-                        runSearch();
+            return Tooltip(
+              message: tr("search"),
+              child: IconButton.custom(
+                style: .from(
+                  containerColor: .resolveWith(
+                    (states) => switch (states) {
+                      ButtonDisabledStates() => null,
+                      ToggleButtonStates(isSelected: true) =>
+                        colorTheme.surfaceContainer,
+                      _ => colorTheme.primary,
+                    },
+                  ),
+                  iconTheme: .resolveWith(
+                    (states) => .from(
+                      color: switch (states) {
+                        ButtonDisabledStates() => null,
+                        ToggleButtonStates(isSelected: true) =>
+                          colorTheme.primary,
+                        _ => colorTheme.onPrimary,
+                      },
+                    ),
+                  ),
+                ),
+                settings: const .new(
+                  size: .medium,
+                  shape: .square,
+                  width: .wide,
+                ),
+                isSelected: isSelected,
+                onTap: canSearch || isSelected
+                    ? () {
+                        if (canSearch) {
+                          HapticFeedback.selectionClick();
+                          runSearch();
+                        }
                       }
-                    }
-                  : null,
-              icon: Stack(
-                fit: .expand,
-                children: [
-                  isSelected
-                      // ? const Icon(Symbols.close_rounded)
-                      ? const Icon(Symbols.search_rounded)
-                      : const Icon(Symbols.search_rounded),
-                  if (isSelected)
-                    Positioned.fill(
-                      child: Align.center(
-                        child: SizedBox.square(
-                          dimension: 40.0,
-                          child: Builder(
-                            builder: (context) => CircularProgressIndicator(
-                              value: null,
-                              padding: .zero,
-                              strokeWidth: 2.0,
-                              backgroundColor: Colors.transparent,
-                              color: IconTheme.of(context).color,
+                    : null,
+                child: Stack(
+                  children: [
+                    const ButtonContent(icon: Icon(Symbols.search_rounded)),
+                    if (isSelected)
+                      Positioned.fill(
+                        child: Align.center(
+                          child: SizedBox.square(
+                            dimension: 40.0,
+                            child: Builder(
+                              builder: (context) => CircularProgressIndicator(
+                                value: null,
+                                padding: .zero,
+                                strokeWidth: 2.0,
+                                backgroundColor: Colors.transparent,
+                                color: IconTheme.of(context).color,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-              tooltip: tr("search"),
             );
           },
         ),
@@ -707,26 +746,43 @@ class AddAppPageState extends State<AddAppPage> {
           ),
         ),
         const SizedBox(height: 16),
-        GeneratedForm(
-          key: Key(
-            '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
-          ),
-          items: [
-            ...pickedSource!.combinedAppSpecificSettingFormItems,
-            ...(pickedSourceOverride != null
-                ? pickedSource!.sourceConfigSettingFormItems.map((e) => [e])
-                : []),
-          ],
-          onValueChanges: (values, valid, isBuilding) {
-            if (!isBuilding) {
-              setState(() {
-                additionalSettings = values;
-                additionalSettingsValid = valid;
-              });
+        () {
+          final formItems = pickedSource!.combinedAppSpecificSettingFormItems;
+          if (includePrereleasesByDefault || shizukuPretendToBeGooglePlay) {
+            for (final row in formItems) {
+              for (final item in row) {
+                if (item.key == "includePrereleases" &&
+                    includePrereleasesByDefault) {
+                  item.defaultValue = true;
+                }
+                if (item.key == "shizukuPretendToBeGooglePlay" &&
+                    shizukuPretendToBeGooglePlay) {
+                  item.defaultValue = true;
+                }
+              }
             }
-          },
-          textFieldType: useBlackTheme ? .outlined : .filled,
-        ),
+          }
+          return GeneratedForm(
+            key: Key(
+              '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
+            ),
+            items: [
+              ...formItems,
+              ...(pickedSourceOverride != null
+                  ? pickedSource!.sourceConfigSettingFormItems.map((e) => [e])
+                  : []),
+            ],
+            onValueChanges: (values, valid, isBuilding) {
+              if (!isBuilding) {
+                setState(() {
+                  additionalSettings = values;
+                  additionalSettingsValid = valid;
+                });
+              }
+            },
+            textFieldType: useBlackTheme ? .outlined : .filled,
+          );
+        }(),
         Flex.vertical(
           children: [
             const SizedBox(height: 16),
@@ -806,7 +862,7 @@ class AddAppPageState extends State<AddAppPage> {
         alignment: WrapAlignment.spaceBetween,
         spacing: 12,
         children: [
-          GestureDetector(
+          InkWell(
             onTap: () {
               showDialog(
                 context: context,
@@ -819,7 +875,7 @@ class AddAppPageState extends State<AddAppPage> {
                       ...sourceProvider.sources.map(
                         (e) => Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: GestureDetector(
+                          child: InkWell(
                             onTap: e.hosts.isNotEmpty
                                 ? () {
                                     launchUrlString(
@@ -860,10 +916,10 @@ class AddAppPageState extends State<AddAppPage> {
               ),
             ),
           ),
-          GestureDetector(
+          InkWell(
             onTap: () {
               launchUrlString(
-                'https://apps.obtainium.imranr.dev/',
+                'https://apps.obtainium.page/',
                 mode: LaunchMode.externalApplication,
               );
             },
@@ -882,211 +938,241 @@ class AddAppPageState extends State<AddAppPage> {
 
     final padding = MediaQuery.paddingOf(context);
 
-    return SuperKeyboardBuilder(
-      builder: (context, mobileGeometry) {
-        // debugPrint(
-        //   "${mobileGeometry.bottomPadding} ${mobileGeometry.keyboardHeight}",
-        // );
-        return Scaffold(
-          resizeToAvoidBottomInset: false,
-          backgroundColor: backgroundColor,
-          // bottomNavigationBar: pickedSource == null
-          //     ? Padding(
-          //         padding: .fromLTRB(
-          //           padding.left,
-          //           0.0,
-          //           padding.right,
-          //           padding.bottom,
-          //         ),
-          //         child: getSourcesListWidget(),
-          //       )
-          //     : null,
-          body: SafeArea(
-            top: false,
-            bottom: false,
-            child: SwitchTheme.merge(
-              data: CustomThemeFactory.createSwitchTheme(
-                colorTheme: colorTheme,
-                shapeTheme: shapeTheme,
-                stateTheme: stateTheme,
-                size: useBlackTheme ? .black : .standard,
-                color: useBlackTheme ? .black : .standard,
-              ),
-              child: CustomScrollView(
-                slivers: <Widget>[
-                  CustomAppBar(
-                    type: showBackButton ? .small : .largeFlexible,
-                    expandedContainerColor: backgroundColor,
-                    collapsedContainerColor: backgroundColor,
-                    collapsedPadding: showBackButton
-                        ? const .fromSTEB(8.0 + 40.0 + 8.0, 0.0, 16.0, 0.0)
-                        : null,
-                    leading: showBackButton
-                        ? const Padding(
-                            padding: .fromSTEB(8.0 - 4.0, 0.0, 8.0 - 4.0, 0.0),
-                            child: DeveloperPageBackButton(),
-                          )
-                        : null,
-                    title: Text(
-                      tr("addApp"),
-                      textAlign: !showBackButton ? .center : .start,
-                    ),
-                    trailing: Padding(
-                      padding: const .fromSTEB(8.0 - 4.0, 0.0, 8.0 - 4.0, 0.0),
-                      child: Flex.horizontal(
-                        children: [
-                          IconButton(
-                            style: LegacyThemeFactory.createIconButtonStyle(
-                              colorTheme: colorTheme,
-                              elevationTheme: elevationTheme,
-                              shapeTheme: shapeTheme,
-                              stateTheme: stateTheme,
-                              color: .standard,
-                              containerColor: useBlackTheme
-                                  ? colorTheme.surfaceContainer
-                                  : Colors.transparent,
-                              // containerColor: useBlackTheme
-                              //     ? Colors.transparent
-                              //     : colorTheme.surfaceContainerHighest,
-                              iconColor: useBlackTheme
-                                  ? colorTheme.primary
-                                  : colorTheme.onSurfaceVariant,
+    // return SuperKeyboardBuilder(
+    //   builder: (context, mobileGeometry) {
+    //     // debugPrint(
+    //     //   "${mobileGeometry.bottomPadding} ${mobileGeometry.keyboardHeight}",
+    //     // );
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: backgroundColor,
+      // bottomNavigationBar: pickedSource == null
+      //     ? Padding(
+      //         padding: .fromLTRB(
+      //           padding.left,
+      //           0.0,
+      //           padding.right,
+      //           padding.bottom,
+      //         ),
+      //         child: getSourcesListWidget(),
+      //       )
+      //     : null,
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: SwitchTheme.mergeWithData(
+          data: CustomThemeFactory.createSwitchTheme(
+            colorTheme: colorTheme,
+            shapeTheme: shapeTheme,
+            stateTheme: stateTheme,
+            size: useBlackTheme ? .black : .standard,
+            color: useBlackTheme ? .black : .standard,
+          ),
+          child: CustomScrollView(
+            slivers: <Widget>[
+              CustomAppBar(
+                type: showBackButton ? .small : .largeFlexible,
+                expandedContainerColor: backgroundColor,
+                collapsedContainerColor: backgroundColor,
+                collapsedPadding: showBackButton
+                    ? const .fromSTEB(8.0 + 40.0 + 8.0, 0.0, 16.0, 0.0)
+                    : null,
+                leading: showBackButton
+                    ? const Padding(
+                        padding: .fromSTEB(8.0 - 4.0, 0.0, 8.0 - 4.0, 0.0),
+                        child: DeveloperPageBackButton(),
+                      )
+                    : null,
+                title: Text(
+                  tr("addApp"),
+                  textAlign: !showBackButton ? .center : .start,
+                ),
+                trailing: Padding(
+                  padding: const .fromSTEB(8.0 - 4.0, 0.0, 8.0 - 4.0, 0.0),
+                  child: Flex.horizontal(
+                    children: [
+                      Tooltip(
+                        message: tr("supportedSources"),
+                        child: IconButton(
+                          style: .from(
+                            containerColor: .resolveWith(
+                              (states) => switch (states) {
+                                ButtonDisabledStates() => null,
+                                _ =>
+                                  useBlackTheme
+                                      ? colorTheme.surfaceContainer
+                                      : Colors.transparent,
+                              },
                             ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return GeneratedFormModal(
-                                    singleNullReturnButton: tr('ok'),
-                                    title: tr('supportedSources'),
-                                    items: const [],
-                                    additionalWidgets: [
-                                      ...sourceProvider.sources.map(
-                                        (e) => Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 4,
-                                          ),
-                                          child: GestureDetector(
-                                            onTap: e.hosts.isNotEmpty
-                                                ? () {
-                                                    launchUrlString(
-                                                      'https://${e.hosts[0]}',
-                                                      mode: LaunchMode
-                                                          .externalApplication,
-                                                    );
-                                                  }
-                                                : null,
-                                            child: Text(
-                                              '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
-                                              style: TextStyle(
-                                                decoration: e.hosts.isNotEmpty
-                                                    ? TextDecoration.underline
-                                                    : TextDecoration.none,
-                                              ),
+                            iconTheme: .resolveWith(
+                              (states) => .from(
+                                color: switch (states) {
+                                  ButtonDisabledStates() => null,
+                                  _ =>
+                                    useBlackTheme
+                                        ? colorTheme.primary
+                                        : colorTheme.onSurfaceVariant,
+                                },
+                              ),
+                            ),
+                          ),
+                          settings: const .new(
+                            size: .small,
+                            shape: .round,
+                            color: .standard,
+                            width: .normal,
+                          ),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return GeneratedFormModal(
+                                  singleNullReturnButton: tr('ok'),
+                                  title: tr('supportedSources'),
+                                  items: const [],
+                                  additionalWidgets: [
+                                    ...sourceProvider.sources.map(
+                                      (e) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: e.hosts.isNotEmpty
+                                              ? () {
+                                                  launchUrlString(
+                                                    'https://${e.hosts[0]}',
+                                                    mode: LaunchMode
+                                                        .externalApplication,
+                                                  );
+                                                }
+                                              : null,
+                                          child: Text(
+                                            '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
+                                            style: TextStyle(
+                                              decoration: e.hosts.isNotEmpty
+                                                  ? TextDecoration.underline
+                                                  : TextDecoration.none,
                                             ),
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        '${tr('note')}:',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      '${tr('note')}:',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        tr(
-                                          'selfHostedNote',
-                                          args: [tr('overrideSource')],
-                                        ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      tr(
+                                        'selfHostedNote',
+                                        args: [tr('overrideSource')],
                                       ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            icon: const Icon(Symbols.list_alt_rounded),
-                            tooltip: tr("supportedSources"),
-                          ),
-                          IconButton(
-                            style: LegacyThemeFactory.createIconButtonStyle(
-                              colorTheme: colorTheme,
-                              elevationTheme: elevationTheme,
-                              shapeTheme: shapeTheme,
-                              stateTheme: stateTheme,
-                              color: .standard,
-                              containerColor: useBlackTheme
-                                  ? colorTheme.surfaceContainer
-                                  : Colors.transparent,
-                              // containerColor: useBlackTheme
-                              //     ? Colors.transparent
-                              //     : colorTheme.surfaceContainerHighest,
-                              iconColor: useBlackTheme
-                                  ? colorTheme.primary
-                                  : colorTheme.onSurfaceVariant,
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: const Icon(Symbols.list_alt_rounded),
+                        ),
+                      ),
+                      Tooltip(
+                        message: tr("crowdsourcedConfigsShort"),
+                        child: IconButton(
+                          style: .from(
+                            containerColor: .resolveWith(
+                              (states) => switch (states) {
+                                ButtonDisabledStates() => null,
+                                _ =>
+                                  useBlackTheme
+                                      ? colorTheme.surfaceContainer
+                                      : Colors.transparent,
+                              },
                             ),
-                            onPressed: () {
-                              launchUrlString(
-                                "https://apps.obtainium.imranr.dev/",
-                                mode: .externalApplication,
-                              );
-                            },
-                            icon: const Icon(Symbols.crowdsource_rounded),
-                            tooltip: tr("crowdsourcedConfigsShort"),
+                            iconTheme: .resolveWith(
+                              (states) => .from(
+                                color: switch (states) {
+                                  ButtonDisabledStates() => null,
+                                  _ =>
+                                    useBlackTheme
+                                        ? colorTheme.primary
+                                        : colorTheme.onSurfaceVariant,
+                                },
+                              ),
+                            ),
                           ),
+                          settings: const .new(
+                            size: .small,
+                            shape: .round,
+                            color: .standard,
+                            width: .normal,
+                          ),
+                          onTap: () {
+                            launchUrlString(
+                              "https://apps.obtainium.imranr.dev/",
+                              mode: .externalApplication,
+                            );
+                          },
+                          icon: const Icon(
+                            Symbols.crowdsource_rounded,
+                            fill: 0.0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const .fromLTRB(8.0, 0.0, 8.0, 8.0),
+                  child: Surface(
+                    clipBehavior: .antiAlias,
+                    shape: shapeTheme.applyCorner(
+                      corner: shapeTheme.cornerLarge,
+                    ),
+                    color: colorTheme.surface,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Flex.vertical(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          getUrlInputRow(),
+                          const SizedBox(height: 16),
+                          if (pickedSource != null)
+                            getHTMLSourceOverrideDropdown(),
+                          if (shouldShowSearchBar()) getSearchBarRow(),
+                          if (pickedSource != null)
+                            FutureBuilder(
+                              builder: (ctx, val) {
+                                return val.data != null && val.data!.isNotEmpty
+                                    ? Text(
+                                        val.data!,
+                                        style: typescaleTheme.bodySmall
+                                            .toTextStyle(),
+                                      )
+                                    : const SizedBox();
+                              },
+                              future: pickedSource?.getSourceNote(),
+                            ),
+                          if (pickedSource != null) getAdditionalOptsCol(),
                         ],
                       ),
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const .fromLTRB(8.0, 0.0, 8.0, 8.0),
-                      child: Material(
-                        clipBehavior: .antiAlias,
-                        shape: CornersBorder.rounded(
-                          corners: .all(shapeTheme.corner.large),
-                        ),
-                        color: colorTheme.surface,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Flex.vertical(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              getUrlInputRow(),
-                              const SizedBox(height: 16),
-                              if (pickedSource != null)
-                                getHTMLSourceOverrideDropdown(),
-                              if (shouldShowSearchBar()) getSearchBarRow(),
-                              if (pickedSource != null)
-                                FutureBuilder(
-                                  builder: (ctx, val) {
-                                    return val.data != null &&
-                                            val.data!.isNotEmpty
-                                        ? Text(
-                                            val.data!,
-                                            style: typescaleTheme.bodySmall
-                                                .toTextStyle(),
-                                          )
-                                        : const SizedBox();
-                                  },
-                                  future: pickedSource?.getSourceNote(),
-                                ),
-                              if (pickedSource != null) getAdditionalOptsCol(),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
-                ],
+                ),
               ),
-            ),
+              SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
+    //   },
+    // );
   }
 }

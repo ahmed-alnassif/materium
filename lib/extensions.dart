@@ -1,6 +1,5 @@
 import 'package:dynamic_color_ffi/dynamic_color_ffi.dart';
 import 'package:materium/flutter.dart';
-import 'package:screen_corners_ffi/screen_corners_ffi.dart';
 
 extension DynamicColorSchemeToColorTheme on DynamicColorScheme {
   ColorThemeDataPartial toColorTheme() => ColorThemeDataPartial.from(
@@ -63,26 +62,6 @@ extension DynamicColorSchemeToColorTheme on DynamicColorScheme {
     onError: onError,
     errorContainer: errorContainer,
     onErrorContainer: onErrorContainer,
-  );
-}
-
-extension ScreenCornersDataExtension on ScreenCornersData {
-  CornersBorderDelegate get cornersDelegate => switch (defaultTargetPlatform) {
-    .android || .fuchsia || .linux || .windows => .rounded,
-    .iOS || .macOS => .superellipse,
-  };
-
-  Corners toCorners() => Corners.only(
-    topLeft: .circular(topLeft),
-    topRight: .circular(topRight),
-    bottomLeft: .circular(bottomLeft),
-    bottomRight: .circular(bottomRight),
-  );
-
-  CornersBorder toShape({BorderSide side = .none}) => CornersBorder(
-    delegate: cornersDelegate,
-    corners: toCorners(),
-    side: side,
   );
 }
 
@@ -445,7 +424,7 @@ class CornersFilledInputBorder extends InputBorder {
   const CornersFilledInputBorder({
     super.borderSide = .none,
     required this.delegate,
-    this.corners = .none,
+    this.corners = .zero,
   });
 
   final CornersBorderDelegate delegate;

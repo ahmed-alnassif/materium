@@ -68,12 +68,12 @@ class CustomListItemLeading extends StatelessWidget {
       width: 40.0,
       height: !shrinkWrapHeight ? 40.0 : null,
       child: Skeleton.leaf(
-        child: Material.raw(
+        child: Surface.raw(
           clipBehavior: .antiAlias,
           borderOnForeground: false,
           shape:
               containerShape ??
-              CornersBorder.rounded(corners: .all(shapeTheme.corner.full)),
+              shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
           color: containerColor ?? Colors.transparent,
           child: DefaultTextStyle.merge(
             textAlign: .center,
@@ -81,7 +81,7 @@ class CustomListItemLeading extends StatelessWidget {
             softWrap: false,
             overflow: .visible,
             style: TextStyle(color: contentColor),
-            child: IconTheme.merge(
+            child: IconTheme.mergeWithData(
               data: .from(opticalSize: 24.0, size: 24.0, color: contentColor),
               child: Align.center(child: child),
             ),
@@ -343,12 +343,12 @@ class _SettingsPageState extends State<SettingsPage> {
     });
 
     final unselectedContainerOuterCorner = useBlackTheme
-        ? shapeTheme.corner.medium
-        : shapeTheme.corner.large;
+        ? shapeTheme.cornerMedium
+        : shapeTheme.cornerLarge;
     final selectedContainerOuterCorner = useBlackTheme
-        ? shapeTheme.corner.largeIncreased
-        : shapeTheme.corner.large;
-    final containerInnerCorner = shapeTheme.corner.extraSmall;
+        ? shapeTheme.cornerLargeIncreased
+        : shapeTheme.cornerLarge;
+    final containerInnerCorner = shapeTheme.cornerExtraSmall;
 
     final disabledContainerColor = colorTheme.onSurface.withValues(alpha: 0.10);
     final disabledContentColor = colorTheme.onSurface.withValues(alpha: 0.38);
@@ -377,8 +377,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final selectedListItemTheme = ListItemThemeDataPartial.from(
       containerColor: .all(selectedContainerColor),
       containerShape: .all(
-        CornersBorder.rounded(
-          corners: .all(selectedContainerOuterCorner),
+        shapeTheme.applyCorner(
+          corner: selectedContainerOuterCorner,
           // side: useBlackTheme
           //     ? BorderSide(width: 2.0, color: colorTheme.onPrimaryContainer)
           //     : .none,
@@ -427,7 +427,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           _ => .all(containerInnerCorner),
         };
-        return CornersBorder.rounded(corners: corners);
+        return shapeTheme.applyCorners(corners: corners);
       }),
       leadingIconTheme: .all(
         .from(
@@ -484,7 +484,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 : useBlackTheme
                 ? colorTheme.primaryContainer
                 : colorTheme.secondaryContainer;
-            return ListItemTheme.merge(
+            return ListItemTheme.mergeWithData(
               data: isSelected
                   ? selectedListItemTheme
                   : unselectedListItemTheme,
@@ -539,7 +539,7 @@ class _SettingsPageState extends State<SettingsPage> {
       key: const ValueKey("useFGService"),
       child: Selector<SettingsProvider, bool>(
         selector: (context, settingsProvider) => settingsProvider.useFGService,
-        builder: (context, useFGService, _) => ListItemTheme.merge(
+        builder: (context, useFGService, _) => ListItemTheme.mergeWithData(
           data: useFGService ? selectedListItemTheme : unselectedListItemTheme,
           child: ListItemContainer(
             child: MergeSemantics(
@@ -571,54 +571,55 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Selector<SettingsProvider, bool>(
         selector: (context, settingsProvider) =>
             settingsProvider.enableBackgroundUpdates,
-        builder: (context, enableBackgroundUpdates, _) => ListItemTheme.merge(
-          data: enableBackgroundUpdates
-              ? selectedListItemTheme
-              : unselectedListItemTheme,
-          child: ListItemContainer(
-            child: Flex.vertical(
-              crossAxisAlignment: .start,
-              children: [
-                MergeSemantics(
-                  child: ListItemInteraction(
-                    onTap: () => _settingsProvider.enableBackgroundUpdates =
-                        !enableBackgroundUpdates,
-                    child: ListItemLayout(
-                      padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                      trailingPadding: const .symmetric(
-                        vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                      ),
-                      headline: Text(tr("enableBackgroundUpdates")),
-                      trailing: ExcludeFocus(
-                        child: Switch(
-                          onCheckedChanged: (value) =>
-                              _settingsProvider.enableBackgroundUpdates = value,
-                          checked: enableBackgroundUpdates,
+        builder: (context, enableBackgroundUpdates, _) =>
+            ListItemTheme.mergeWithData(
+              data: enableBackgroundUpdates
+                  ? selectedListItemTheme
+                  : unselectedListItemTheme,
+              child: ListItemContainer(
+                child: Flex.vertical(
+                  crossAxisAlignment: .start,
+                  children: [
+                    MergeSemantics(
+                      child: ListItemInteraction(
+                        onTap: () => _settingsProvider.enableBackgroundUpdates =
+                            !enableBackgroundUpdates,
+                        child: ListItemLayout(
+                          padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                          trailingPadding: const .symmetric(
+                            vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                          ),
+                          headline: Text(tr("enableBackgroundUpdates")),
+                          trailing: ExcludeFocus(
+                            child: Switch(
+                              onCheckedChanged: (value) =>
+                                  _settingsProvider.enableBackgroundUpdates =
+                                      value,
+                              checked: enableBackgroundUpdates,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
-                  child: DefaultTextStyle(
-                    style: TypescaleTheme.of(context).bodyMedium.toTextStyle(
-                      color: colorTheme.onSurfaceVariant,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
+                      child: DefaultTextStyle(
+                        style: TypescaleTheme.of(context).bodyMedium
+                            .toTextStyle(color: colorTheme.onSurfaceVariant),
+                        child: Flex.vertical(
+                          crossAxisAlignment: .start,
+                          spacing: 8.0,
+                          children: [
+                            Text(tr('backgroundUpdateReqsExplanation')),
+                            Text(tr('backgroundUpdateLimitsExplanation')),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Flex.vertical(
-                      crossAxisAlignment: .start,
-                      spacing: 8.0,
-                      children: [
-                        Text(tr('backgroundUpdateReqsExplanation')),
-                        Text(tr('backgroundUpdateLimitsExplanation')),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
       ),
     );
 
@@ -627,33 +628,34 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Selector<SettingsProvider, bool>(
         selector: (context, settingsProvider) =>
             settingsProvider.bgUpdatesOnWiFiOnly,
-        builder: (context, bgUpdatesOnWiFiOnly, _) => ListItemTheme.merge(
-          data: bgUpdatesOnWiFiOnly
-              ? selectedListItemTheme
-              : unselectedListItemTheme,
-          child: ListItemContainer(
-            child: MergeSemantics(
-              child: ListItemInteraction(
-                onTap: () => _settingsProvider.bgUpdatesOnWiFiOnly =
-                    !bgUpdatesOnWiFiOnly,
-                child: ListItemLayout(
-                  padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                  trailingPadding: const .symmetric(
-                    vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                  ),
-                  headline: Text(tr("bgUpdatesOnWiFiOnly")),
-                  trailing: ExcludeFocus(
-                    child: Switch(
-                      onCheckedChanged: (value) =>
-                          _settingsProvider.bgUpdatesOnWiFiOnly = value,
-                      checked: bgUpdatesOnWiFiOnly,
+        builder: (context, bgUpdatesOnWiFiOnly, _) =>
+            ListItemTheme.mergeWithData(
+              data: bgUpdatesOnWiFiOnly
+                  ? selectedListItemTheme
+                  : unselectedListItemTheme,
+              child: ListItemContainer(
+                child: MergeSemantics(
+                  child: ListItemInteraction(
+                    onTap: () => _settingsProvider.bgUpdatesOnWiFiOnly =
+                        !bgUpdatesOnWiFiOnly,
+                    child: ListItemLayout(
+                      padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                      trailingPadding: const .symmetric(
+                        vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                      ),
+                      headline: Text(tr("bgUpdatesOnWiFiOnly")),
+                      trailing: ExcludeFocus(
+                        child: Switch(
+                          onCheckedChanged: (value) =>
+                              _settingsProvider.bgUpdatesOnWiFiOnly = value,
+                          checked: bgUpdatesOnWiFiOnly,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
       ),
     );
 
@@ -663,7 +665,7 @@ class _SettingsPageState extends State<SettingsPage> {
         selector: (context, settingsProvider) =>
             settingsProvider.bgUpdatesWhileChargingOnly,
         builder: (context, bgUpdatesWhileChargingOnly, _) =>
-            ListItemTheme.merge(
+            ListItemTheme.mergeWithData(
               data: bgUpdatesWhileChargingOnly
                   ? selectedListItemTheme
                   : unselectedListItemTheme,
@@ -747,33 +749,39 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Selector<SettingsProvider, bool>(
               selector: (context, settingsProvider) =>
                   settingsProvider.checkOnStart,
-              builder: (context, checkOnStart, _) => ListItemTheme.merge(
-                data: checkOnStart
-                    ? selectedListItemTheme
-                    : unselectedListItemTheme,
-                child: ListItemContainer(
-                  child: MergeSemantics(
-                    child: ListItemInteraction(
-                      onTap: () =>
-                          _settingsProvider.checkOnStart = !checkOnStart,
-                      child: ListItemLayout(
-                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                        trailingPadding: const .symmetric(
-                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                        ),
-                        headline: Text(tr("checkOnStart")),
-                        trailing: ExcludeFocus(
-                          child: Switch(
-                            onCheckedChanged: (value) =>
-                                _settingsProvider.checkOnStart = value,
-                            checked: checkOnStart,
+              builder: (context, checkOnStart, _) =>
+                  ListItemTheme.mergeWithData(
+                    data: checkOnStart
+                        ? selectedListItemTheme
+                        : unselectedListItemTheme,
+                    child: ListItemContainer(
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () =>
+                              _settingsProvider.checkOnStart = !checkOnStart,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("checkOnStart")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider.checkOnStart = value,
+                                checked: checkOnStart,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
             ),
           ),
           verticalSpace,
@@ -783,7 +791,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.checkUpdateOnDetailPage,
               builder: (context, checkUpdateOnDetailPage, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.mergeWithData(
                     data: checkUpdateOnDetailPage
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -826,7 +834,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.onlyCheckInstalledOrTrackOnlyApps,
               builder: (context, onlyCheckInstalledOrTrackOnlyApps, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.mergeWithData(
                     data: onlyCheckInstalledOrTrackOnlyApps
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -873,27 +881,208 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.removeOnExternalUninstall,
               builder: (context, removeOnExternalUninstall, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.mergeWithData(
                     data: removeOnExternalUninstall
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
                     child: ListItemContainer(
-                      child: ListItemInteraction(
-                        onTap: () =>
-                            _settingsProvider.removeOnExternalUninstall =
-                                !removeOnExternalUninstall,
-                        child: ListItemLayout(
-                          padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                          trailingPadding: const .symmetric(
-                            vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () =>
+                              _settingsProvider.removeOnExternalUninstall =
+                                  !removeOnExternalUninstall,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("removeOnExternalUninstall")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider
+                                            .removeOnExternalUninstall =
+                                        value,
+                                checked: removeOnExternalUninstall,
+                              ),
+                            ),
                           ),
-                          headline: Text(tr("removeOnExternalUninstall")),
-                          trailing: ExcludeFocus(
-                            child: Switch(
-                              onCheckedChanged: (value) =>
-                                  _settingsProvider.removeOnExternalUninstall =
-                                      value,
-                              checked: removeOnExternalUninstall,
+                        ),
+                      ),
+                    ),
+                  ),
+            ),
+          ),
+          verticalSpace,
+          KeyedSubtree(
+            key: const ValueKey("includePrereleasesByDefault"),
+            child: Selector<SettingsProvider, bool>(
+              selector: (context, settingsProvider) =>
+                  settingsProvider.includePrereleasesByDefault,
+              builder: (context, includePrereleasesByDefault, _) =>
+                  ListItemTheme.mergeWithData(
+                    data: includePrereleasesByDefault
+                        ? selectedListItemTheme
+                        : unselectedListItemTheme,
+                    child: ListItemContainer(
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () =>
+                              _settingsProvider.includePrereleasesByDefault =
+                                  !includePrereleasesByDefault,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("includePrereleasesByDefault")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider
+                                            .includePrereleasesByDefault =
+                                        value,
+                                checked: includePrereleasesByDefault,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+            ),
+          ),
+          verticalSpace,
+          KeyedSubtree(
+            key: const ValueKey("tactileFeedbackEnabled"),
+            child: Selector<SettingsProvider, bool>(
+              selector: (context, settingsProvider) =>
+                  settingsProvider.tactileFeedbackEnabled,
+              builder: (context, tactileFeedbackEnabled, _) =>
+                  ListItemTheme.mergeWithData(
+                    data: tactileFeedbackEnabled
+                        ? selectedListItemTheme
+                        : unselectedListItemTheme,
+                    child: ListItemContainer(
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () =>
+                              _settingsProvider.tactileFeedbackEnabled =
+                                  !tactileFeedbackEnabled,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("tactileFeedbackEnabled")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider.tactileFeedbackEnabled =
+                                        value,
+                                checked: tactileFeedbackEnabled,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+            ),
+          ),
+          verticalSpace,
+          KeyedSubtree(
+            key: const ValueKey("showBatteryOptimizationPrompt"),
+            child: Selector<SettingsProvider, bool>(
+              selector: (context, settingsProvider) =>
+                  settingsProvider.showBatteryOptimizationPrompt,
+              builder: (context, showBatteryOptimizationPrompt, _) =>
+                  ListItemTheme.mergeWithData(
+                    data: showBatteryOptimizationPrompt
+                        ? selectedListItemTheme
+                        : unselectedListItemTheme,
+                    child: ListItemContainer(
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () =>
+                              _settingsProvider.showBatteryOptimizationPrompt =
+                                  !showBatteryOptimizationPrompt,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("showBatteryOptimizationPrompt")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider
+                                            .showBatteryOptimizationPrompt =
+                                        value,
+                                checked: showBatteryOptimizationPrompt,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+            ),
+          ),
+          verticalSpace,
+          KeyedSubtree(
+            key: const ValueKey("showAppDowngradeError"),
+            child: Selector<SettingsProvider, bool>(
+              selector: (context, settingsProvider) =>
+                  settingsProvider.showAppDowngradeError,
+              builder: (context, showAppDowngradeError, _) =>
+                  ListItemTheme.mergeWithData(
+                    data: showAppDowngradeError
+                        ? selectedListItemTheme
+                        : unselectedListItemTheme,
+                    child: ListItemContainer(
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () => _settingsProvider.showAppDowngradeError =
+                              !showAppDowngradeError,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("showAppDowngradeError")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider.showAppDowngradeError =
+                                        value,
+                                checked: showAppDowngradeError,
+                              ),
                             ),
                           ),
                         ),
@@ -908,33 +1097,39 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Selector<SettingsProvider, bool>(
               selector: (context, settingsProvider) =>
                   settingsProvider.parallelDownloads,
-              builder: (context, parallelDownloads, _) => ListItemTheme.merge(
-                data: parallelDownloads
-                    ? selectedListItemTheme
-                    : unselectedListItemTheme,
-                child: ListItemContainer(
-                  child: MergeSemantics(
-                    child: ListItemInteraction(
-                      onTap: () => _settingsProvider.parallelDownloads =
-                          !parallelDownloads,
-                      child: ListItemLayout(
-                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                        trailingPadding: const .symmetric(
-                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                        ),
-                        headline: Text(tr("parallelDownloads")),
-                        trailing: ExcludeFocus(
-                          child: Switch(
-                            onCheckedChanged: (value) =>
-                                _settingsProvider.parallelDownloads = value,
-                            checked: parallelDownloads,
+              builder: (context, parallelDownloads, _) =>
+                  ListItemTheme.mergeWithData(
+                    data: parallelDownloads
+                        ? selectedListItemTheme
+                        : unselectedListItemTheme,
+                    child: ListItemContainer(
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: () => _settingsProvider.parallelDownloads =
+                              !parallelDownloads,
+                          child: ListItemLayout(
+                            padding: const .fromLTRB(
+                              16.0,
+                              0.0,
+                              16.0 - 8.0,
+                              0.0,
+                            ),
+                            trailingPadding: const .symmetric(
+                              vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                            ),
+                            headline: Text(tr("parallelDownloads")),
+                            trailing: ExcludeFocus(
+                              child: Switch(
+                                onCheckedChanged: (value) =>
+                                    _settingsProvider.parallelDownloads = value,
+                                checked: parallelDownloads,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
             ),
           ),
           verticalSpace,
@@ -944,7 +1139,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.beforeNewInstallsShareToAppVerifier,
               builder: (context, beforeNewInstallsShareToAppVerifier, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.mergeWithData(
                     data: beforeNewInstallsShareToAppVerifier
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -984,14 +1179,18 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                           ),
-                          ListItemInteraction(
-                            onTap: () => launchUrlString(
-                              "https://github.com/soupslurpr/AppVerifier",
-                              mode: LaunchMode.externalApplication,
-                            ),
-                            child: ListItemLayout(
-                              leading: const Icon(Symbols.open_in_new_rounded),
-                              supportingText: Text(tr("about")),
+                          MergeSemantics(
+                            child: ListItemInteraction(
+                              onTap: () => launchUrlString(
+                                "https://github.com/soupslurpr/AppVerifier",
+                                mode: LaunchMode.externalApplication,
+                              ),
+                              child: ListItemLayout(
+                                leading: const Icon(
+                                  Symbols.open_in_new_rounded,
+                                ),
+                                supportingText: Text(tr("about")),
+                              ),
                             ),
                           ),
                         ],
@@ -1006,7 +1205,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Selector<SettingsProvider, bool>(
               selector: (context, settingsProvider) =>
                   settingsProvider.useShizuku,
-              builder: (context, useShizuku, _) => ListItemTheme.merge(
+              builder: (context, useShizuku, _) => ListItemTheme.mergeWithData(
                 data: useShizuku
                     ? selectedListItemTheme
                     : unselectedListItemTheme,
@@ -1040,7 +1239,7 @@ class _SettingsPageState extends State<SettingsPage> {
               selector: (context, settingsProvider) =>
                   settingsProvider.shizukuPretendToBeGooglePlay,
               builder: (context, shizukuPretendToBeGooglePlay, _) =>
-                  ListItemTheme.merge(
+                  ListItemTheme.mergeWithData(
                     data: shizukuPretendToBeGooglePlay
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
@@ -1081,9 +1280,9 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
       const SizedBox(height: 16.0),
-      Material(
+      Surface(
         clipBehavior: .antiAlias,
-        shape: CornersBorder.rounded(corners: .all(shapeTheme.corner.large)),
+        shape: shapeTheme.applyCorner(corner: shapeTheme.cornerLarge),
         color: unselectedContainerColor,
         child: Padding(
           padding: const .all(16.0),
@@ -1110,7 +1309,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 border: CornersFilledInputBorder(
                   delegate: .rounded,
-                  corners: .all(shapeTheme.corner.large),
+                  corners: .all(shapeTheme.cornerLarge),
                 ),
                 filled: true,
                 fillColor: isSelected
@@ -1191,7 +1390,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     : null;
                 final contentColor = isDisabled ? disabledContentColor : null;
                 final textStyle = TextStyle(color: contentColor);
-                return ListItemTheme.merge(
+                return ListItemTheme.mergeWithData(
                   data: useMaterialYou
                       ? selectedListItemTheme
                       : unselectedListItemTheme,
@@ -1244,7 +1443,7 @@ class _SettingsPageState extends State<SettingsPage> {
               builder: (context, useBlackTheme, _) {
                 useBlackTheme = useBlackTheme && !isDisabled;
                 final textStyle = TextStyle(color: contentColor);
-                return ListItemTheme.merge(
+                return ListItemTheme.mergeWithData(
                   data: useBlackTheme
                       ? selectedListItemTheme
                       : unselectedListItemTheme,
@@ -1300,30 +1499,32 @@ class _SettingsPageState extends State<SettingsPage> {
                 valueListenable: _settings.themeColor,
                 builder: (context, themeColor, _) {
                   final isSelected = themeColor != obtainiumThemeColor;
-                  return ListItemTheme.merge(
+                  return ListItemTheme.mergeWithData(
                     data: !isDisabled && isSelected
                         ? selectedListItemTheme
                         : unselectedListItemTheme,
                     child: ListItemContainer(
-                      child: ListItemInteraction(
-                        onTap: !isDisabled ? selectColor : null,
-                        child: ListItemLayout(
-                          headline: Text(
-                            tr("selectX", args: [tr("colour").toLowerCase()]),
-                            style: textStyle,
-                          ),
-                          supportingText: Text(
-                            "${ColorTools.nameThatColor(themeColor)} "
-                            "(${ColorTools.materialNameAndCode(themeColor, colorSwatchNameMap: _colorsNameMap)})",
-                            style: textStyle,
-                          ),
-                          trailing: ColorIndicator(
-                            width: 40,
-                            height: 40,
-                            borderRadius: 20,
-                            color: containerColor ?? themeColor,
-                            onSelectFocus: false,
-                            onSelect: !isDisabled ? selectColor : null,
+                      child: MergeSemantics(
+                        child: ListItemInteraction(
+                          onTap: !isDisabled ? selectColor : null,
+                          child: ListItemLayout(
+                            headline: Text(
+                              tr("selectX", args: [tr("colour").toLowerCase()]),
+                              style: textStyle,
+                            ),
+                            supportingText: Text(
+                              "${ColorTools.nameThatColor(themeColor)} "
+                              "(${ColorTools.materialNameAndCode(themeColor, colorSwatchNameMap: _colorsNameMap)})",
+                              style: textStyle,
+                            ),
+                            trailing: ColorIndicator(
+                              width: 40,
+                              height: 40,
+                              borderRadius: 20,
+                              color: containerColor ?? themeColor,
+                              onSelectFocus: false,
+                              onSelect: !isDisabled ? selectColor : null,
+                            ),
                           ),
                         ),
                       ),
@@ -1357,12 +1558,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         border: CornersFilledInputBorder(
                           delegate: .rounded,
                           corners: isSelected
-                              ? .all(shapeTheme.corner.large)
+                              ? .all(shapeTheme.cornerLarge)
                               : .directional(
-                                  topStart: shapeTheme.corner.extraSmall,
-                                  topEnd: shapeTheme.corner.extraSmall,
-                                  bottomStart: shapeTheme.corner.large,
-                                  bottomEnd: shapeTheme.corner.extraSmall,
+                                  topStart: shapeTheme.cornerExtraSmall,
+                                  topEnd: shapeTheme.cornerExtraSmall,
+                                  bottomStart: shapeTheme.cornerLarge,
+                                  bottomEnd: shapeTheme.cornerExtraSmall,
                                 ),
                         ),
                         filled: true,
@@ -1449,12 +1650,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         border: CornersFilledInputBorder(
                           delegate: .rounded,
                           corners: isSelected
-                              ? .all(shapeTheme.corner.large)
+                              ? .all(shapeTheme.cornerLarge)
                               : .directional(
-                                  topStart: shapeTheme.corner.extraSmall,
-                                  topEnd: shapeTheme.corner.extraSmall,
-                                  bottomStart: shapeTheme.corner.extraSmall,
-                                  bottomEnd: shapeTheme.corner.large,
+                                  topStart: shapeTheme.cornerExtraSmall,
+                                  topEnd: shapeTheme.cornerExtraSmall,
+                                  bottomStart: shapeTheme.cornerExtraSmall,
+                                  bottomEnd: shapeTheme.cornerLarge,
                                 ),
                         ),
                         filled: true,
@@ -1502,7 +1703,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             Symbols.moon_stars_rounded,
                             fill: 1.0,
                           ),
-                          label: "Calm",
+                          label: "Neutral",
                         ),
                         DropdownMenuEntry(
                           style: LegacyThemeFactory.createMenuButtonStyle(
@@ -1520,7 +1721,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             Symbols.brush_rounded,
                             fill: 1.0,
                           ),
-                          label: "Pastel",
+                          label: "Soft",
                         ),
                         DropdownMenuEntry(
                           style: LegacyThemeFactory.createMenuButtonStyle(
@@ -1538,7 +1739,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             Symbols.nutrition_rounded,
                             fill: 1.0,
                           ),
-                          label: "Juicy",
+                          label: "Bright",
                         ),
                         DropdownMenuEntry(
                           style: LegacyThemeFactory.createMenuButtonStyle(
@@ -1556,7 +1757,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             Symbols.draw_abstract_rounded,
                             fill: 1.0,
                           ),
-                          label: "Creative",
+                          label: "Bold",
                         ),
                         DropdownMenuEntry(
                           style: LegacyThemeFactory.createMenuButtonStyle(
@@ -1613,10 +1814,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           border: CornersFilledInputBorder(
                             delegate: .rounded,
                             corners: .directional(
-                              topStart: shapeTheme.corner.large,
-                              topEnd: shapeTheme.corner.extraSmall,
-                              bottomStart: shapeTheme.corner.extraSmall,
-                              bottomEnd: shapeTheme.corner.extraSmall,
+                              topStart: shapeTheme.cornerLarge,
+                              topEnd: shapeTheme.cornerExtraSmall,
+                              bottomStart: shapeTheme.cornerExtraSmall,
+                              bottomEnd: shapeTheme.cornerExtraSmall,
                             ),
                           ),
                           filled: true,
@@ -1708,10 +1909,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           border: CornersFilledInputBorder(
                             delegate: .rounded,
                             corners: .directional(
-                              topStart: shapeTheme.corner.extraSmall,
-                              topEnd: shapeTheme.corner.large,
-                              bottomStart: shapeTheme.corner.extraSmall,
-                              bottomEnd: shapeTheme.corner.extraSmall,
+                              topStart: shapeTheme.cornerExtraSmall,
+                              topEnd: shapeTheme.cornerLarge,
+                              bottomStart: shapeTheme.cornerExtraSmall,
+                              bottomEnd: shapeTheme.cornerExtraSmall,
                             ),
                           ),
                           filled: true,
@@ -1768,7 +1969,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.showAppWebpage,
-          builder: (context, showAppWebpage, _) => ListItemTheme.merge(
+          builder: (context, showAppWebpage, _) => ListItemTheme.mergeWithData(
             data: showAppWebpage
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1802,7 +2003,7 @@ class _SettingsPageState extends State<SettingsPage> {
         key: const ValueKey("pinUpdates"),
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) => settingsProvider.pinUpdates,
-          builder: (context, pinUpdates, _) => ListItemTheme.merge(
+          builder: (context, pinUpdates, _) => ListItemTheme.mergeWithData(
             data: pinUpdates ? selectedListItemTheme : unselectedListItemTheme,
             child: ListItemContainer(
               child: MergeSemantics(
@@ -1834,33 +2035,34 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.buryNonInstalled,
-          builder: (context, buryNonInstalled, _) => ListItemTheme.merge(
-            data: buryNonInstalled
-                ? selectedListItemTheme
-                : unselectedListItemTheme,
-            child: ListItemContainer(
-              child: MergeSemantics(
-                child: ListItemInteraction(
-                  onTap: () =>
-                      _settingsProvider.buryNonInstalled = !buryNonInstalled,
-                  child: ListItemLayout(
-                    padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                    trailingPadding: const .symmetric(
-                      vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                    ),
-                    headline: Text(tr("moveNonInstalledAppsToBottom")),
-                    trailing: ExcludeFocus(
-                      child: Switch(
-                        onCheckedChanged: (value) =>
-                            _settingsProvider.buryNonInstalled = value,
-                        checked: buryNonInstalled,
+          builder: (context, buryNonInstalled, _) =>
+              ListItemTheme.mergeWithData(
+                data: buryNonInstalled
+                    ? selectedListItemTheme
+                    : unselectedListItemTheme,
+                child: ListItemContainer(
+                  child: MergeSemantics(
+                    child: ListItemInteraction(
+                      onTap: () => _settingsProvider.buryNonInstalled =
+                          !buryNonInstalled,
+                      child: ListItemLayout(
+                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                        trailingPadding: const .symmetric(
+                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                        ),
+                        headline: Text(tr("moveNonInstalledAppsToBottom")),
+                        trailing: ExcludeFocus(
+                          child: Switch(
+                            onCheckedChanged: (value) =>
+                                _settingsProvider.buryNonInstalled = value,
+                            checked: buryNonInstalled,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
         ),
       ),
       verticalSpace,
@@ -1869,7 +2071,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.groupByCategory,
-          builder: (context, groupByCategory, _) => ListItemTheme.merge(
+          builder: (context, groupByCategory, _) => ListItemTheme.mergeWithData(
             data: groupByCategory
                 ? selectedListItemTheme
                 : unselectedListItemTheme,
@@ -1904,33 +2106,34 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.hideTrackOnlyWarning,
-          builder: (context, hideTrackOnlyWarning, _) => ListItemTheme.merge(
-            data: _settingsProvider.hideTrackOnlyWarning
-                ? selectedListItemTheme
-                : unselectedListItemTheme,
-            child: ListItemContainer(
-              child: MergeSemantics(
-                child: ListItemInteraction(
-                  onTap: () => _settingsProvider.hideTrackOnlyWarning =
-                      !hideTrackOnlyWarning,
-                  child: ListItemLayout(
-                    padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                    trailingPadding: const .symmetric(
-                      vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                    ),
-                    headline: Text(tr("dontShowTrackOnlyWarnings")),
-                    trailing: ExcludeFocus(
-                      child: Switch(
-                        onCheckedChanged: (value) =>
-                            _settingsProvider.hideTrackOnlyWarning = value,
-                        checked: hideTrackOnlyWarning,
+          builder: (context, hideTrackOnlyWarning, _) =>
+              ListItemTheme.mergeWithData(
+                data: _settingsProvider.hideTrackOnlyWarning
+                    ? selectedListItemTheme
+                    : unselectedListItemTheme,
+                child: ListItemContainer(
+                  child: MergeSemantics(
+                    child: ListItemInteraction(
+                      onTap: () => _settingsProvider.hideTrackOnlyWarning =
+                          !hideTrackOnlyWarning,
+                      child: ListItemLayout(
+                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                        trailingPadding: const .symmetric(
+                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                        ),
+                        headline: Text(tr("dontShowTrackOnlyWarnings")),
+                        trailing: ExcludeFocus(
+                          child: Switch(
+                            onCheckedChanged: (value) =>
+                                _settingsProvider.hideTrackOnlyWarning = value,
+                            checked: hideTrackOnlyWarning,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
         ),
       ),
       verticalSpace,
@@ -1939,40 +2142,41 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Selector<SettingsProvider, bool>(
           selector: (context, settingsProvider) =>
               settingsProvider.hideAPKOriginWarning,
-          builder: (context, hideAPKOriginWarning, _) => ListItemTheme.merge(
-            data: hideAPKOriginWarning
-                ? selectedListItemTheme
-                : unselectedListItemTheme,
-            child: ListItemContainer(
-              isLast: true,
-              child: MergeSemantics(
-                child: ListItemInteraction(
-                  onTap: () => _settingsProvider.hideAPKOriginWarning =
-                      !hideAPKOriginWarning,
-                  child: ListItemLayout(
-                    padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
-                    trailingPadding: const .symmetric(
-                      vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                    ),
-                    headline: Text(tr("dontShowAPKOriginWarnings")),
-                    trailing: ExcludeFocus(
-                      child: Switch(
-                        onCheckedChanged: (value) =>
-                            _settingsProvider.hideAPKOriginWarning = value,
-                        checked: hideAPKOriginWarning,
+          builder: (context, hideAPKOriginWarning, _) =>
+              ListItemTheme.mergeWithData(
+                data: hideAPKOriginWarning
+                    ? selectedListItemTheme
+                    : unselectedListItemTheme,
+                child: ListItemContainer(
+                  isLast: true,
+                  child: MergeSemantics(
+                    child: ListItemInteraction(
+                      onTap: () => _settingsProvider.hideAPKOriginWarning =
+                          !hideAPKOriginWarning,
+                      child: ListItemLayout(
+                        padding: const .fromLTRB(16.0, 0.0, 16.0 - 8.0, 0.0),
+                        trailingPadding: const .symmetric(
+                          vertical: (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                        ),
+                        headline: Text(tr("dontShowAPKOriginWarnings")),
+                        trailing: ExcludeFocus(
+                          child: Switch(
+                            onCheckedChanged: (value) =>
+                                _settingsProvider.hideAPKOriginWarning = value,
+                            checked: hideAPKOriginWarning,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
         ),
       ),
       const SizedBox(height: 16.0),
-      Material(
+      Surface(
         clipBehavior: .antiAlias,
-        shape: CornersBorder.rounded(corners: .all(shapeTheme.corner.large)),
+        shape: shapeTheme.applyCorner(corner: shapeTheme.cornerLarge),
         color: unselectedContainerColor,
         child: const Padding(
           padding: .all(16.0),
@@ -1986,19 +2190,21 @@ class _SettingsPageState extends State<SettingsPage> {
       const SizedBox(height: 16.0),
       KeyedSubtree(
         key: const ValueKey("appSource"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             isFirst: true,
-            child: ListItemInteraction(
-              onTap: () => launchUrlString(
-                SettingsProvider.sourceUrl,
-                mode: LaunchMode.externalApplication,
-              ),
-              child: ListItemLayout(
-                leading: const Icon(Symbols.code_rounded),
-                headline: Text(tr("appSource")),
-                trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+            child: MergeSemantics(
+              child: ListItemInteraction(
+                onTap: () => launchUrlString(
+                  SettingsProvider.sourceUrl,
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: ListItemLayout(
+                  leading: const Icon(Symbols.code_rounded),
+                  headline: Text(tr("appSource")),
+                  trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+                ),
               ),
             ),
           ),
@@ -2007,18 +2213,20 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("wiki"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
-            child: ListItemInteraction(
-              onTap: () => launchUrlString(
-                "https://wiki.obtainium.imranr.dev/",
-                mode: LaunchMode.externalApplication,
-              ),
-              child: ListItemLayout(
-                leading: const Icon(Symbols.help_rounded, fill: 1.0),
-                headline: Text(tr("wiki")),
-                trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+            child: MergeSemantics(
+              child: ListItemInteraction(
+                onTap: () => launchUrlString(
+                  "https://wiki.obtainium.page/",
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: ListItemLayout(
+                  leading: const Icon(Symbols.help_rounded, fill: 1.0),
+                  headline: Text(tr("wiki")),
+                  trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+                ),
               ),
             ),
           ),
@@ -2027,18 +2235,20 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("crowdsourcedConfigs"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
-            child: ListItemInteraction(
-              onTap: () => launchUrlString(
-                "https://apps.obtainium.imranr.dev/",
-                mode: LaunchMode.externalApplication,
-              ),
-              child: ListItemLayout(
-                leading: const Icon(Symbols.apps_rounded),
-                headline: Text(tr("crowdsourcedConfigsLabel")),
-                trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+            child: MergeSemantics(
+              child: ListItemInteraction(
+                onTap: () => launchUrlString(
+                  "https://apps.obtainium.page/",
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: ListItemLayout(
+                  leading: const Icon(Symbols.apps_rounded),
+                  headline: Text(tr("crowdsourcedConfigsLabel")),
+                  trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+                ),
               ),
             ),
           ),
@@ -2047,20 +2257,22 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("appLogs"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
-            child: ListItemInteraction(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (context) => const _LogsPage(),
+            child: MergeSemantics(
+              child: ListItemInteraction(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => const _LogsPage(),
+                  ),
                 ),
-              ),
-              child: ListItemLayout(
-                leading: const Icon(Symbols.bug_report_rounded, fill: 1.0),
-                headline: Text(tr("appLogs")),
-                trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+                child: ListItemLayout(
+                  leading: const Icon(Symbols.bug_report_rounded, fill: 1.0),
+                  headline: Text(tr("appLogs")),
+                  trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+                ),
               ),
             ),
           ),
@@ -2069,21 +2281,23 @@ class _SettingsPageState extends State<SettingsPage> {
       verticalSpace,
       KeyedSubtree(
         key: const ValueKey("importExport"),
-        child: ListItemTheme.merge(
+        child: ListItemTheme.mergeWithData(
           data: unselectedListItemTheme,
           child: ListItemContainer(
             isLast: true,
-            child: ListItemInteraction(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (context) => const ImportExportPage(),
+            child: MergeSemantics(
+              child: ListItemInteraction(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => const ImportExportPage(),
+                  ),
                 ),
-              ),
-              child: ListItemLayout(
-                leading: const Icon(Symbols.swap_vert_rounded, fill: 1.0),
-                headline: Text(tr("importExport")),
-                trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+                child: ListItemLayout(
+                  leading: const Icon(Symbols.swap_vert_rounded, fill: 1.0),
+                  headline: Text(tr("importExport")),
+                  trailing: const Icon(Symbols.keyboard_arrow_right_rounded),
+                ),
               ),
             ),
           ),
@@ -2119,7 +2333,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 textAlign: !showBackButton ? .center : .start,
               ),
             ),
-            SwitchTheme.merge(
+            SwitchTheme.mergeWithData(
               data: CustomThemeFactory.createSwitchTheme(
                 colorTheme: colorTheme,
                 shapeTheme: shapeTheme,
@@ -2144,194 +2358,194 @@ class _SettingsPageState extends State<SettingsPage> {
               //   sliver: SliverList.list(children: listItems),
               // ),
             ),
-            ListItemTheme.merge(
+            ListItemTheme.mergeWithData(
               data: unselectedListItemTheme,
               child: SliverPadding(
                 padding: const .symmetric(horizontal: 8.0),
                 sliver: SliverList.list(
                   children: [
-                    Padding(
-                      padding: .fromLTRB(16.0, 20.0, 16.0, 8.0),
-                      child: Text(
-                        "Back up & sync",
-                        style: typescaleTheme.labelLarge.toTextStyle(
-                          color: colorTheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    ListItemContainer(
-                      isFirst: true,
-                      child: ListItemInteraction(
-                        onTap: () async {
-                          await Fluttertoast.cancel();
-                          await Fluttertoast.showToast(
-                            msg: "Coming soon!",
-                            toastLength: .LENGTH_SHORT,
-                          );
-                        },
-                        child: ListItemLayout(
-                          leading: CustomListItemLeading.fromExtendedColor(
-                            extendedColor: staticColors.green,
-                            pairing: unselectedPairing,
-                            containerShape: RoundedPolygonBorder(
-                              polygon: MaterialShapes.pill,
-                            ),
-                            child: const Icon(
-                              Symbols.compare_arrows_rounded,
-                              fill: 1.0,
-                            ),
-                          ),
-                          headline: Text("Import / export"),
-                          supportingText: Text("Back up or restore app data"),
-                          trailing: const Icon(
-                            Symbols.keyboard_arrow_right_rounded,
-                          ),
-                        ),
-                      ),
-                    ),
-                    verticalSpace,
-                    ListItemContainer(
-                      isLast: true,
-                      child: ListItemInteraction(
-                        onTap: () async {
-                          await Fluttertoast.cancel();
-                          await Fluttertoast.showToast(
-                            msg: "Coming soon!",
-                            toastLength: .LENGTH_SHORT,
-                          );
-                        },
-                        child: ListItemLayout(
-                          leading: CustomListItemLeading.fromExtendedColor(
-                            extendedColor: staticColors.green,
-                            pairing: unselectedPairing,
-                            containerShape: RoundedPolygonBorder(
-                              polygon: MaterialShapes.cookie9Sided,
-                            ),
-                            child: const Icon(Symbols.sync_rounded, fill: 1.0),
-                          ),
-                          headline: Text("Sync"),
-                          supportingText: Text("Persist data between devices"),
-                          trailing: const Icon(
-                            Symbols.keyboard_arrow_right_rounded,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: .fromLTRB(16.0, 20.0, 16.0, 8.0),
-                      child: Text(
-                        "Appearance",
-                        style: typescaleTheme.labelLarge.toTextStyle(
-                          color: colorTheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    ListItemContainer(
-                      isFirst: true,
-                      child: ListItemInteraction(
-                        onTap: () async {
-                          await Fluttertoast.cancel();
-                          await Fluttertoast.showToast(
-                            msg: "Coming soon!",
-                            toastLength: .LENGTH_SHORT,
-                          );
-                        },
-                        child: ListItemLayout(
-                          leading: CustomListItemLeading.fromExtendedColor(
-                            extendedColor: staticColors.orange,
-                            pairing: unselectedPairing,
-                            containerShape: RoundedPolygonBorder(
-                              polygon: MaterialShapes.slanted,
-                            ),
-                            child: const Icon(
-                              Symbols.translate_rounded,
-                              fill: 1.0,
-                            ),
-                          ),
-                          headline: Text("Language"),
-                          supportingText: Text("Follow system"),
-                          // supportingText: Text("Static (Creative)"),
-                          trailing: const Icon(
-                            Symbols.keyboard_arrow_right_rounded,
-                          ),
-                        ),
-                      ),
-                    ),
-                    verticalSpace,
-                    ListItemContainer(
-                      child: ListItemInteraction(
-                        onTap: () async {
-                          await Fluttertoast.cancel();
-                          await Fluttertoast.showToast(
-                            msg: "Coming soon!",
-                            toastLength: .LENGTH_SHORT,
-                          );
-                        },
-                        child: ListItemLayout(
-                          leading: CustomListItemLeading.fromExtendedColor(
-                            extendedColor: staticColors.orange,
-                            pairing: unselectedPairing,
-                            containerShape: RoundedPolygonBorder(
-                              polygon: MaterialShapes.sunny,
-                            ),
-                            child: const Icon(
-                              Symbols.brightness_5_rounded,
-                              fill: 1.0,
-                            ),
-                          ),
-                          headline: Text("Theme"),
-                          supportingText: Text("Follow system"),
-                          // supportingText: Text("Static (Creative)"),
-                          trailing: const Icon(
-                            Symbols.keyboard_arrow_right_rounded,
-                          ),
-                        ),
-                      ),
-                    ),
-                    verticalSpace,
-                    ListItemContainer(
-                      isLast: true,
-                      child: ListItemInteraction(
-                        onTap: () async {
-                          await Fluttertoast.cancel();
-                          await Fluttertoast.showToast(
-                            msg: "Coming soon!",
-                            toastLength: .LENGTH_SHORT,
-                          );
-                        },
-                        child: ListItemLayout(
-                          leading: CustomListItemLeading.fromExtendedColor(
-                            extendedColor: staticColors.orange,
-                            pairing: unselectedPairing,
-                            containerShape: RoundedPolygonBorder(
-                              polygon: MaterialShapes.clover8Leaf,
-                            ),
-                            child: const Icon(
-                              Symbols.palette_rounded,
-                              fill: 1.0,
-                            ),
-                          ),
-                          headline: Text("Color scheme"),
-                          supportingText: Text("Dynamic (creative)"),
-                          // supportingText: Text("Static (Creative)"),
-                          trailing: Flex.horizontal(
-                            children: [
-                              SizedBox.square(
-                                dimension: 40.0,
-                                child: Material(
-                                  shape: CornersBorder.rounded(
-                                    corners: .all(shapeTheme.corner.full),
-                                  ),
-                                  color: colorTheme.primaryFixed,
-                                ),
-                              ),
-                              const SizedBox(width: 12.0),
-                              const Icon(Symbols.keyboard_arrow_right_rounded),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Padding(
+                    //   padding: .fromLTRB(16.0, 20.0, 16.0, 8.0),
+                    //   child: Text(
+                    //     "Back up & sync",
+                    //     style: typescaleTheme.labelLarge.toTextStyle(
+                    //       color: colorTheme.onSurfaceVariant,
+                    //     ),
+                    //   ),
+                    // ),
+                    // ListItemContainer(
+                    //   isFirst: true,
+                    //   child: ListItemInteraction(
+                    //     onTap: () async {
+                    //       await Fluttertoast.cancel();
+                    //       await Fluttertoast.showToast(
+                    //         msg: "Coming soon!",
+                    //         toastLength: .LENGTH_SHORT,
+                    //       );
+                    //     },
+                    //     child: ListItemLayout(
+                    //       leading: CustomListItemLeading.fromExtendedColor(
+                    //         extendedColor: staticColors.green,
+                    //         pairing: unselectedPairing,
+                    //         containerShape: RoundedPolygonBorder(
+                    //           polygon: MaterialShapes.pill,
+                    //         ),
+                    //         child: const Icon(
+                    //           Symbols.compare_arrows_rounded,
+                    //           fill: 1.0,
+                    //         ),
+                    //       ),
+                    //       headline: Text("Import / export"),
+                    //       supportingText: Text("Back up or restore app data"),
+                    //       trailing: const Icon(
+                    //         Symbols.keyboard_arrow_right_rounded,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // verticalSpace,
+                    // ListItemContainer(
+                    //   isLast: true,
+                    //   child: ListItemInteraction(
+                    //     onTap: () async {
+                    //       await Fluttertoast.cancel();
+                    //       await Fluttertoast.showToast(
+                    //         msg: "Coming soon!",
+                    //         toastLength: .LENGTH_SHORT,
+                    //       );
+                    //     },
+                    //     child: ListItemLayout(
+                    //       leading: CustomListItemLeading.fromExtendedColor(
+                    //         extendedColor: staticColors.green,
+                    //         pairing: unselectedPairing,
+                    //         containerShape: RoundedPolygonBorder(
+                    //           polygon: MaterialShapes.cookie9Sided,
+                    //         ),
+                    //         child: const Icon(Symbols.sync_rounded, fill: 1.0),
+                    //       ),
+                    //       headline: Text("Sync"),
+                    //       supportingText: Text("Persist data between devices"),
+                    //       trailing: const Icon(
+                    //         Symbols.keyboard_arrow_right_rounded,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // Padding(
+                    //   padding: .fromLTRB(16.0, 20.0, 16.0, 8.0),
+                    //   child: Text(
+                    //     "Appearance",
+                    //     style: typescaleTheme.labelLarge.toTextStyle(
+                    //       color: colorTheme.onSurfaceVariant,
+                    //     ),
+                    //   ),
+                    // ),
+                    // ListItemContainer(
+                    //   isFirst: true,
+                    //   child: ListItemInteraction(
+                    //     onTap: () async {
+                    //       await Fluttertoast.cancel();
+                    //       await Fluttertoast.showToast(
+                    //         msg: "Coming soon!",
+                    //         toastLength: .LENGTH_SHORT,
+                    //       );
+                    //     },
+                    //     child: ListItemLayout(
+                    //       leading: CustomListItemLeading.fromExtendedColor(
+                    //         extendedColor: staticColors.orange,
+                    //         pairing: unselectedPairing,
+                    //         containerShape: RoundedPolygonBorder(
+                    //           polygon: MaterialShapes.slanted,
+                    //         ),
+                    //         child: const Icon(
+                    //           Symbols.translate_rounded,
+                    //           fill: 1.0,
+                    //         ),
+                    //       ),
+                    //       headline: Text("Language"),
+                    //       supportingText: Text("Follow system"),
+                    //       // supportingText: Text("Static (Creative)"),
+                    //       trailing: const Icon(
+                    //         Symbols.keyboard_arrow_right_rounded,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // verticalSpace,
+                    // ListItemContainer(
+                    //   child: ListItemInteraction(
+                    //     onTap: () async {
+                    //       await Fluttertoast.cancel();
+                    //       await Fluttertoast.showToast(
+                    //         msg: "Coming soon!",
+                    //         toastLength: .LENGTH_SHORT,
+                    //       );
+                    //     },
+                    //     child: ListItemLayout(
+                    //       leading: CustomListItemLeading.fromExtendedColor(
+                    //         extendedColor: staticColors.orange,
+                    //         pairing: unselectedPairing,
+                    //         containerShape: RoundedPolygonBorder(
+                    //           polygon: MaterialShapes.sunny,
+                    //         ),
+                    //         child: const Icon(
+                    //           Symbols.brightness_5_rounded,
+                    //           fill: 1.0,
+                    //         ),
+                    //       ),
+                    //       headline: Text("Theme"),
+                    //       supportingText: Text("Follow system"),
+                    //       // supportingText: Text("Static (Creative)"),
+                    //       trailing: const Icon(
+                    //         Symbols.keyboard_arrow_right_rounded,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // verticalSpace,
+                    // ListItemContainer(
+                    //   isLast: true,
+                    //   child: ListItemInteraction(
+                    //     onTap: () async {
+                    //       await Fluttertoast.cancel();
+                    //       await Fluttertoast.showToast(
+                    //         msg: "Coming soon!",
+                    //         toastLength: .LENGTH_SHORT,
+                    //       );
+                    //     },
+                    //     child: ListItemLayout(
+                    //       leading: CustomListItemLeading.fromExtendedColor(
+                    //         extendedColor: staticColors.orange,
+                    //         pairing: unselectedPairing,
+                    //         containerShape: RoundedPolygonBorder(
+                    //           polygon: MaterialShapes.clover8Leaf,
+                    //         ),
+                    //         child: const Icon(
+                    //           Symbols.palette_rounded,
+                    //           fill: 1.0,
+                    //         ),
+                    //       ),
+                    //       headline: Text("Color scheme"),
+                    //       supportingText: Text("Dynamic (creative)"),
+                    //       // supportingText: Text("Static (Creative)"),
+                    //       trailing: Flex.horizontal(
+                    //         children: [
+                    //           SizedBox.square(
+                    //             dimension: 40.0,
+                    //             child: Surface(
+                    //               shape: shapeTheme.applyCorner(
+                    //                 corner: shapeTheme.cornerFull,
+                    //               ),
+                    //               color: colorTheme.primaryFixed,
+                    //             ),
+                    //           ),
+                    //           const SizedBox(width: 12.0),
+                    //           const Icon(Symbols.keyboard_arrow_right_rounded),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                     Padding(
                       padding: .fromLTRB(16.0, 20.0, 16.0, 8.0),
                       child: Text(
@@ -2341,35 +2555,35 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                     ),
-                    ListItemContainer(
-                      isFirst: true,
-                      child: ListItemInteraction(
-                        onTap: () async {
-                          await Fluttertoast.cancel();
-                          await Fluttertoast.showToast(
-                            msg: "Coming soon!",
-                            toastLength: .LENGTH_SHORT,
-                          );
-                        },
-                        child: ListItemLayout(
-                          leading: CustomListItemLeading.fromExtendedColor(
-                            extendedColor: staticColors.purple,
-                            pairing: unselectedPairing,
-                            containerShape: RoundedPolygonBorder(
-                              polygon: MaterialShapes.circle,
-                            ),
-                            child: const Icon(Symbols.info_rounded, fill: 1.0),
-                          ),
-                          headline: Text("About Materium"),
-                          supportingText: Text("Dynamic"),
-                          // supportingText: Text("Static (Creative)"),
-                          trailing: const Icon(
-                            Symbols.keyboard_arrow_right_rounded,
-                          ),
-                        ),
-                      ),
-                    ),
-                    verticalSpace,
+                    // ListItemContainer(
+                    //   isFirst: true,
+                    //   child: ListItemInteraction(
+                    //     onTap: () async {
+                    //       await Fluttertoast.cancel();
+                    //       await Fluttertoast.showToast(
+                    //         msg: "Coming soon!",
+                    //         toastLength: .LENGTH_SHORT,
+                    //       );
+                    //     },
+                    //     child: ListItemLayout(
+                    //       leading: CustomListItemLeading.fromExtendedColor(
+                    //         extendedColor: staticColors.purple,
+                    //         pairing: unselectedPairing,
+                    //         containerShape: RoundedPolygonBorder(
+                    //           polygon: MaterialShapes.circle,
+                    //         ),
+                    //         child: const Icon(Symbols.info_rounded, fill: 1.0),
+                    //       ),
+                    //       headline: Text("About Materium"),
+                    //       supportingText: Text("Dynamic"),
+                    //       // supportingText: Text("Static (Creative)"),
+                    //       trailing: const Icon(
+                    //         Symbols.keyboard_arrow_right_rounded,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    // verticalSpace,
                     ValueListenableBuilder(
                       key: const ValueKey("developerMode"),
                       valueListenable: _settings.developerMode,
@@ -2381,9 +2595,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         final contentColor = isDisabled
                             ? disabledContentColor
                             : null;
-                        return ListItemTheme.merge(
+                        return ListItemTheme.mergeWithData(
                           data: unselectedListItemTheme,
                           child: ListItemContainer(
+                            isFirst: true,
                             isLast: true,
                             child: IntrinsicHeight(
                               child: Flex.horizontal(
@@ -2398,65 +2613,66 @@ class _SettingsPageState extends State<SettingsPage> {
                                                 .developerMode
                                                 .disabledTooltip
                                           : "",
-                                      child: ListItemInteraction(
-                                        stateLayerShape: .all(
-                                          CornersBorder.rounded(
-                                            corners:
-                                                CornersDirectional.horizontal(
-                                                  end: shapeTheme
-                                                      .corner
-                                                      .extraSmall,
+                                      child: MergeSemantics(
+                                        child: ListItemInteraction(
+                                          stateLayerShape: .all(
+                                            shapeTheme.applyCorners(
+                                              corners:
+                                                  CornersDirectional.horizontal(
+                                                    end: shapeTheme
+                                                        .cornerExtraSmall,
+                                                  ),
+                                            ),
+                                          ),
+                                          onTap: developerMode
+                                              ? () => Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute<void>(
+                                                    builder: (context) =>
+                                                        const DeveloperPage(),
+                                                  ),
+                                                )
+                                              : null,
+                                          child: ListItemLayout(
+                                            padding: const .directional(
+                                              start: 16.0,
+                                              end: 12.0,
+                                            ),
+                                            leading:
+                                                CustomListItemLeading.fromExtendedColor(
+                                                  extendedColor:
+                                                      staticColors.purple,
+                                                  pairing: unselectedPairing,
+                                                  containerShape:
+                                                      RoundedPolygonBorder(
+                                                        polygon: MaterialShapes
+                                                            .pixelCircle,
+                                                      ),
+                                                  child: const Icon(
+                                                    Symbols
+                                                        .developer_mode_rounded,
+                                                    fill: 1.0,
+                                                  ),
                                                 ),
-                                          ),
-                                        ),
-                                        onTap: developerMode
-                                            ? () => Navigator.push(
-                                                context,
-                                                MaterialPageRoute<void>(
-                                                  builder: (context) =>
-                                                      const DeveloperPage(),
-                                                ),
-                                              )
-                                            : null,
-                                        child: ListItemLayout(
-                                          padding: const .directional(
-                                            start: 16.0,
-                                            end: 12.0,
-                                          ),
-                                          leading:
-                                              CustomListItemLeading.fromExtendedColor(
-                                                extendedColor:
-                                                    staticColors.purple,
-                                                pairing: unselectedPairing,
-                                                containerShape:
-                                                    RoundedPolygonBorder(
-                                                      polygon: MaterialShapes
-                                                          .pixelCircle,
-                                                    ),
-                                                child: const Icon(
-                                                  Symbols
-                                                      .developer_mode_rounded,
-                                                  fill: 1.0,
-                                                ),
-                                              ),
-                                          headline: Text(
-                                            t
-                                                .settingsPage
-                                                .items
-                                                .developerMode
-                                                .label,
-                                          ),
-                                          supportingText: Text(
-                                            t
-                                                .settingsPage
-                                                .items
-                                                .developerMode
-                                                .description,
-                                          ),
-                                          trailing: Icon(
-                                            Symbols
-                                                .keyboard_arrow_right_rounded,
-                                            color: contentColor,
+                                            headline: Text(
+                                              t
+                                                  .settingsPage
+                                                  .items
+                                                  .developerMode
+                                                  .label,
+                                            ),
+                                            supportingText: Text(
+                                              t
+                                                  .settingsPage
+                                                  .items
+                                                  .developerMode
+                                                  .description,
+                                            ),
+                                            trailing: Icon(
+                                              Symbols
+                                                  .keyboard_arrow_right_rounded,
+                                              color: contentColor,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -2469,28 +2685,34 @@ class _SettingsPageState extends State<SettingsPage> {
                                     endIndent: 10.0,
                                     color: colorTheme.outlineVariant,
                                   ),
-                                  ListItemInteraction(
-                                    stateLayerShape: .all(
-                                      CornersBorder.rounded(
-                                        corners: CornersDirectional.horizontal(
-                                          start: shapeTheme.corner.extraSmall,
+                                  MergeSemantics(
+                                    child: ListItemInteraction(
+                                      stateLayerShape: .all(
+                                        shapeTheme.applyCorners(
+                                          corners:
+                                              CornersDirectional.horizontal(
+                                                start:
+                                                    shapeTheme.cornerExtraSmall,
+                                              ),
                                         ),
                                       ),
-                                    ),
-                                    onTap: () => _settings.developerMode.value =
-                                        !developerMode,
-                                    child: Padding(
-                                      padding: const .fromSTEB(
-                                        12.0 - 8.0,
-                                        (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                                        16.0 - 8.0,
-                                        (32.0 + 2 * 10.0 - 48.0) / 2.0,
-                                      ),
-                                      child: ExcludeFocus(
-                                        child: Switch(
-                                          onCheckedChanged:
-                                              _settings.developerMode.setValue,
-                                          checked: developerMode,
+                                      onTap: () =>
+                                          _settings.developerMode.value =
+                                              !developerMode,
+                                      child: Padding(
+                                        padding: const .fromSTEB(
+                                          12.0 - 8.0,
+                                          (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                                          16.0 - 8.0,
+                                          (32.0 + 2 * 10.0 - 48.0) / 2.0,
+                                        ),
+                                        child: ExcludeFocus(
+                                          child: Switch(
+                                            onCheckedChanged: _settings
+                                                .developerMode
+                                                .setValue,
+                                            checked: developerMode,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -2882,7 +3104,7 @@ class _LogsPageState extends State<_LogsPage> {
                 return logs != null
                     ? SliverPadding(
                         padding: const .fromLTRB(8.0, 0.0, 8.0, 16.0),
-                        sliver: ListItemTheme.merge(
+                        sliver: ListItemTheme.mergeWithData(
                           data: CustomThemeFactory.createListItemTheme(
                             colorTheme: colorTheme,
                             elevationTheme: elevationTheme,
@@ -2937,23 +3159,25 @@ class _LogsPageState extends State<_LogsPage> {
                                     child: ListItemContainer(
                                       isFirst: isFirst,
                                       isLast: isLast,
-                                      child: ListItemInteraction(
-                                        onTap: () async {
-                                          await Fluttertoast.showToast(
-                                            msg: "Not yet implemented!",
-                                            toastLength: Toast.LENGTH_SHORT,
-                                          );
-                                        },
-                                        child: ListItemLayout(
-                                          alignment: .top,
-                                          leading: IconTheme.merge(
-                                            data: IconThemeDataPartial.from(
-                                              color: iconColor,
+                                      child: MergeSemantics(
+                                        child: ListItemInteraction(
+                                          onTap: () async {
+                                            await Fluttertoast.showToast(
+                                              msg: "Not yet implemented!",
+                                              toastLength: Toast.LENGTH_SHORT,
+                                            );
+                                          },
+                                          child: ListItemLayout(
+                                            alignment: .top,
+                                            leading: IconTheme.mergeWithData(
+                                              data: IconThemeDataPartial.from(
+                                                color: iconColor,
+                                              ),
+                                              child: icon,
                                             ),
-                                            child: icon,
+                                            overline: Text("${log.createdAt}"),
+                                            headline: Text(log.message),
                                           ),
-                                          overline: Text("${log.createdAt}"),
-                                          headline: Text(log.message),
                                         ),
                                       ),
                                     ),

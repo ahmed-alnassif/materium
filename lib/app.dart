@@ -29,6 +29,10 @@ class _ObtainiumState extends State<Obtainium> {
 
   late Listenable _themeListenable;
 
+  var _lastUpdateInterval = -1;
+  var _lastUseFGService = false;
+  var _firstRunHandled = false;
+
   Future<void> requestNonOptionalPermissions() async {
     final NotificationPermission notificationPermission =
         await FlutterForegroundTask.checkNotificationPermission();
@@ -36,7 +40,11 @@ class _ObtainiumState extends State<Obtainium> {
       await FlutterForegroundTask.requestNotificationPermission();
     }
     if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
-      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      if (!mounted) return;
+      final settingsProvider = context.read<SettingsProvider>();
+      if (settingsProvider.showBatteryOptimizationPrompt) {
+        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+      }
     }
   }
 
@@ -119,7 +127,7 @@ class _ObtainiumState extends State<Obtainium> {
   }
 
   Widget _buildTypefaceTheme(BuildContext context, Widget child) =>
-      TypefaceTheme.merge(data: _typography.typeface, child: child);
+      TypefaceTheme.mergeWithData(data: _typography.typeface, child: child);
 
   Widget _buildReferenceThemes(BuildContext context, Widget child) =>
       CombiningBuilder(
@@ -179,7 +187,7 @@ class _ObtainiumState extends State<Obtainium> {
             platform: platform,
           );
 
-          return ColorTheme(
+          return ColorTheme.replaceWithData(
             data: colorTheme,
             child: StaticColors(data: staticColors, child: child!),
           );
@@ -188,15 +196,30 @@ class _ObtainiumState extends State<Obtainium> {
       );
 
   Widget _buildSpringTheme(BuildContext context, Widget child) =>
-      SpringTheme(data: const .expressive(), child: child);
+      SpringTheme.replaceWithData(
+        data: const .defaultsExpressive(),
+        child: child,
+      );
 
   Widget _buildTypescaleTheme(BuildContext context, Widget child) =>
-      TypescaleTheme.merge(data: _typography.typescale, child: child);
+      TypescaleTheme.mergeWithData(data: _typography.typescale, child: child);
 
   Widget _buildSystemThemes(BuildContext context, Widget child) =>
       CombiningBuilder(
         useOuterContext: true,
-        builders: [_buildColorThemes, _buildSpringTheme, _buildTypescaleTheme],
+        builders: [
+          _buildColorThemes,
+          _buildSpringTheme,
+          _buildTypescaleTheme,
+          // (context, child) => MeasurementTheme.mergeWithData(
+          //   data: const .from(space100: 8.0),
+          //   child: child,
+          // ),
+          // (context, child) => ShapeTheme.mergeWithData(
+          //   data: const .from(cornerFamily: .rounded),
+          //   child: child,
+          // ),
+        ],
         child: child,
       );
 
@@ -204,10 +227,8 @@ class _ObtainiumState extends State<Obtainium> {
     final useBlackTheme = context.select<SettingsService, bool>(
       (settings) => settings.useBlackTheme.value,
     );
-
     final colorTheme = ColorTheme.of(context);
-
-    return LoadingIndicatorTheme.merge(
+    return LoadingIndicatorTheme.mergeWithData(
       data: .from(
         indicatorColor: useBlackTheme ? colorTheme.primary : null,
         containedContainerColor: useBlackTheme ? colorTheme.primaryDim : null,
@@ -227,7 +248,6 @@ class _ObtainiumState extends State<Obtainium> {
             final shapeTheme = ShapeTheme.of(context);
             final stateTheme = StateTheme.of(context);
             final typescaleTheme = TypescaleTheme.of(context);
-
             final legacyTheme = LegacyThemeFactory.createTheme(
               colorTheme: colorTheme,
               elevationTheme: elevationTheme,
@@ -238,7 +258,6 @@ class _ObtainiumState extends State<Obtainium> {
                   ? colorTheme.surface
                   : colorTheme.surfaceContainer,
             );
-
             return Theme(data: legacyTheme, child: child!);
           }
         },
@@ -257,43 +276,31 @@ class _ObtainiumState extends State<Obtainium> {
 
   Widget _buildNavigatorWrapper(BuildContext context, Widget? child) {
     if (child == null) return const SizedBox.shrink();
-
-    final materialLocalization = Localizations.of<MaterialLocalizations>(
-      context,
-      MaterialLocalizations,
-    );
     final colorTheme = ColorTheme.of(context);
     final typescaleTheme = TypescaleTheme.of(context);
-
-    final category = materialLocalization?.scriptCategory ?? .englishLike;
-    final localizedTextStyle = _DefaultTextStyles.geometryStyleFor(category);
-    final defaultTextStyle = typescaleTheme.bodyLarge
-        .toTextStyle(color: colorTheme.onSurface)
-        .merge(localizedTextStyle);
-    return DefaultTextStyle.merge(style: defaultTextStyle, child: child);
-  }
-
-  Widget _buildApp(BuildContext context) {
-    return RawMaterialApp(
-      debugShowCheckedModeBanner: false,
-
-      // Localization
-      title: "Materium",
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-
-      // Navigation
-      navigatorKey: globalNavigatorKey,
-      builder: _buildNavigatorWrapper,
-      home: Shortcuts(
-        shortcuts: <LogicalKeySet, Intent>{
-          LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
-        },
-        child: const HomePage(),
-      ),
+    return DefaultTextGeometry(
+      style: typescaleTheme.bodyLarge.toTextStyle(color: colorTheme.onSurface),
+      child: TouchGroup(child: child),
     );
   }
+
+  Widget _buildApp(BuildContext context) => RawMaterialApp(
+    debugShowCheckedModeBanner: false,
+
+    // Localization
+    title: "Materium",
+    localizationsDelegates: context.localizationDelegates,
+    supportedLocales: context.supportedLocales,
+    locale: context.locale,
+
+    // Navigation
+    navigatorKey: globalNavigatorKey,
+    builder: _buildNavigatorWrapper,
+    home: Shortcuts(
+      shortcuts: {LogicalKeySet(.select): const ActivateIntent()},
+      child: const HomePage(),
+    ),
+  );
 
   // void onReceiveForegroundServiceData(Object data) {
   //   print("onReceiveTaskData: $data");
@@ -339,9 +346,6 @@ class _ObtainiumState extends State<Obtainium> {
 
   @override
   void dispose() {
-    // Remove a callback to receive data sent from the TaskHandler.
-    // FlutterForegroundTask.removeTaskDataCallback(onReceiveForegroundServiceData);
-
     super.dispose();
   }
 
@@ -363,11 +367,14 @@ class _ObtainiumState extends State<Obtainium> {
       (settingsProvider) => settingsProvider.forcedLocale,
     );
 
-    if (updateInterval == 0) {
-      stopForegroundService();
-      BackgroundFetch.stop();
-    } else {
-      if (useFGService) {
+    if (updateInterval != _lastUpdateInterval ||
+        useFGService != _lastUseFGService) {
+      _lastUpdateInterval = updateInterval;
+      _lastUseFGService = useFGService;
+      if (updateInterval == 0) {
+        stopForegroundService();
+        BackgroundFetch.stop();
+      } else if (useFGService) {
         BackgroundFetch.stop();
         startForegroundService(false);
       } else {
@@ -375,37 +382,42 @@ class _ObtainiumState extends State<Obtainium> {
         BackgroundFetch.start();
       }
     }
-    final isFirstRun = context.select<SettingsProvider, bool>(
-      (settingsProvider) => settingsProvider.checkAndFlipFirstRun(),
-    );
-    if (isFirstRun) {
-      logs.add("This is the first ever run of Materium.");
 
-      // If this is the first run, add Materium to the Apps list
-      getInstalledInfo(obtainiumId).then((value) {
-        if (value?.versionName != null) {
-          appsProvider.saveApps([
-            App(
-              obtainiumId,
-              obtainiumUrl,
-              "deminearchiver",
-              "materium",
-              value!.versionName,
-              value.versionName!,
-              [],
-              0,
-              {
-                "versionDetection": true,
-                "apkFilterRegEx": "fdroid",
-                "invertAPKFilter": true,
-              },
-              null,
-              false,
-            ),
-          ], onlyIfExists: false);
-        }
-      });
-
+    if (!_firstRunHandled) {
+      _firstRunHandled = true;
+      final isFirstRun = context.select<SettingsProvider, bool>(
+        (settingsProvider) => settingsProvider.checkAndFlipFirstRun(),
+      );
+      if (isFirstRun) {
+        logs.add('This is the first ever run of Obtainium.');
+        getInstalledInfo(obtainiumId)
+            .then((value) {
+              if (value?.versionName != null) {
+                appsProvider.saveApps([
+                  App(
+                    obtainiumId,
+                    obtainiumUrl,
+                    'deminearchiver',
+                    'Materium',
+                    value!.versionName,
+                    value.versionName!,
+                    [],
+                    0,
+                    {
+                      'versionDetection': true,
+                      'apkFilterRegEx': 'fdroid',
+                      'invertAPKFilter': true,
+                    },
+                    null,
+                    false,
+                  ),
+                ], onlyIfExists: false);
+              }
+            })
+            .catchError((err) {
+              logs.add('Failed to add Obtainium on first run: $err');
+            });
+      }
       if (!supportedLocales.map((e) => e.key).contains(context.locale) ||
           (forcedLocale == null && context.deviceLocale != context.locale)) {
         context.read<SettingsProvider>().resetLocaleSafe(context);
@@ -417,44 +429,9 @@ class _ObtainiumState extends State<Obtainium> {
     });
 
     final appBuilder = Builder(builder: _buildApp);
-
     return WithForegroundTask(child: _buildThemes(context, appBuilder));
   }
 
-  // static const _platform = DynamicSchemePlatform.phone;
   static const _specVersion = DynamicSchemeSpecVersion.spec2026;
   static const _typography = TypographyDefaults.material3Expressive2026;
-}
-
-abstract final class _DefaultTextStyles {
-  static const englishLike = TextStyle(
-    debugLabel: "englishLike default 2021",
-    inherit: true,
-    decoration: .none,
-    textBaseline: .alphabetic,
-    leadingDistribution: .even,
-  );
-
-  static const dense = TextStyle(
-    debugLabel: "dense default 2021",
-    inherit: true,
-    decoration: .none,
-    textBaseline: .ideographic,
-    leadingDistribution: .even,
-  );
-
-  static const tall = TextStyle(
-    debugLabel: "tall default 2021",
-    inherit: true,
-    decoration: .none,
-    textBaseline: .alphabetic,
-    leadingDistribution: .even,
-  );
-
-  static TextStyle geometryStyleFor(ScriptCategory category) =>
-      switch (category) {
-        .englishLike => englishLike,
-        .dense => dense,
-        .tall => tall,
-      };
 }

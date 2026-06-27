@@ -19,6 +19,7 @@ class GitHub extends AppSource {
     showReleaseDateAsVersionToggle = true;
     this.hostChanged = hostChanged;
     allowIncludeZips = true;
+    allowIncludeTarballs = true;
 
     sourceConfigSettingFormItems = [
       GeneratedFormTextField(
@@ -28,7 +29,7 @@ class GitHub extends AppSource {
         required: false,
         belowWidgets: [
           const SizedBox(height: 4),
-          GestureDetector(
+          InkWell(
             onTap: () {
               launchUrlString(
                 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
@@ -68,7 +69,7 @@ class GitHub extends AppSource {
         ],
         belowWidgets: [
           const SizedBox(height: 4),
-          GestureDetector(
+          InkWell(
             onTap: () {
               launchUrlString(
                 'https://github.com/sky22333/hubproxy',
@@ -85,6 +86,11 @@ class GitHub extends AppSource {
           ),
           const SizedBox(height: 4),
         ],
+      ),
+      GeneratedFormSwitch(
+        'checkRepoRename',
+        label: tr('repoRenamedCheck'),
+        defaultValue: false,
       ),
     ];
 
@@ -179,6 +185,24 @@ class GitHub extends AppSource {
         ],
       ),
     ];
+  }
+
+  bool isApkContainer(
+    String name, {
+    bool includeZips = false,
+    bool includeTarballs = false,
+  }) {
+    var lower = name.toLowerCase();
+    return lower.endsWith('.apk') ||
+        lower.endsWith('.xapk') ||
+        lower.endsWith('.apkm') ||
+        lower.endsWith('.apks') ||
+        (includeZips && lower.endsWith('.zip')) ||
+        (includeTarballs &&
+            (lower.endsWith('.tar.gz') ||
+                lower.endsWith('.tgz') ||
+                lower.endsWith('.tar.bz2') ||
+                lower.endsWith('.tar.xz')));
   }
 
   @override
@@ -335,6 +359,58 @@ class GitHub extends AppSource {
   ) async =>
       '${await getAPIHost(additionalSettings)}/repos${standardUrl.substring('https://${hosts[0]}'.length)}';
 
+  /// Checks if the repository has been renamed or transferred.
+  ///
+  /// This method explicitly disables automatic redirect following to detect when
+  /// GitHub returns a redirect (indicating the repository has moved). A redirect
+  /// from the GitHub API for a repository endpoint definitively indicates that
+  /// the repository has been renamed or transferred to a different owner.
+  ///
+  /// Throws [RepositoryRenamedError] if a redirect is detected.
+  Future<void> checkForRepositoryRename(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings,
+    Map<String, String> sourceConfigSettingValues,
+  ) async {
+    if (sourceConfigSettingValues["checkRepoRename"] == "false") {
+      return;
+    }
+    final uri = Uri.tryParse(standardUrl);
+    final host = uri?.host.toLowerCase() ?? "";
+    // Guard against non-GitHub URLs
+    if (host != hosts[0] && host != "www.${hosts[0]}") {
+      return;
+    }
+    final apiUrl = await convertStandardUrlToAPIUrl(
+      standardUrl,
+      additionalSettings,
+    );
+    final res = await sourceRequest(
+      apiUrl,
+      additionalSettings,
+      followRedirects: false,
+    );
+    if (res.statusCode >= 300 && res.statusCode < 400) {
+      final location = res.headers[HttpHeaders.locationHeader.toLowerCase()];
+      if (location != null) {
+        final res2 = await sourceRequest(
+          location,
+          additionalSettings,
+          followRedirects: false,
+        );
+        String? newUrl;
+        try {
+          newUrl = jsonDecode(res2.body)["html_url"];
+        } catch (e) {
+          // Unexpected - ignore (keep old URL)
+        }
+        if (newUrl != null) {
+          throw RepositoryRenamedError(standardUrl, newUrl);
+        }
+      }
+    }
+  }
+
   @override
   String? changeLogPageFromStandardUrl(String standardUrl) =>
       '$standardUrl/releases';
@@ -349,6 +425,11 @@ class GitHub extends AppSource {
     var sourceConfigSettingValues = await getSourceConfigValues(
       additionalSettings,
       settingsProvider,
+    );
+    await checkForRepositoryRename(
+      standardUrl,
+      additionalSettings,
+      sourceConfigSettingValues,
     );
     bool includePrereleases = additionalSettings['includePrereleases'] == true;
     bool fallbackToOlderReleases =
@@ -371,6 +452,7 @@ class GitHub extends AppSource {
     String sortMethod =
         additionalSettings['sortMethodChoice'] ?? 'smartname-datefallback';
     bool includeZips = additionalSettings['includeZips'] == true;
+    bool includeTarballs = additionalSettings['includeTarballs'] == true;
     dynamic latestRelease;
     if (verifyLatestTag) {
       var temp = requestUrl.split('?');
@@ -403,11 +485,13 @@ class GitHub extends AppSource {
 
       List<dynamic> findReleaseAssetUrls(dynamic release) =>
           (release['assets'] as List<dynamic>?)?.map((e) {
-            var ext = e['name'].toString().toLowerCase().split('.').last;
+            var name = e['name'].toString();
             var url =
-                !(ext == 'apk' ||
-                    ext == 'xapk' ||
-                    (includeZips && ext == 'zip'))
+                !isApkContainer(
+                  name,
+                  includeZips: includeZips,
+                  includeTarballs: includeTarballs,
+                )
                 ? (e['browser_download_url'] ?? e['url'])
                 : (e['url'] ?? e['browser_download_url']);
             url = undoGHProxyMod(url, sourceConfigSettingValues);
@@ -548,11 +632,12 @@ class GitHub extends AppSource {
             .map((e) => e['final_url'] as MapEntry<String, String>)
             .toList();
         var apkAssetsWithUrls = allAssetsWithUrls.where((element) {
-          var ext = (element['final_url'] as MapEntry<String, String>).key
-              .toLowerCase()
-              .split('.')
-              .last;
-          return ext == 'apk' || ext == 'xapk' || (includeZips && ext == 'zip');
+          var name = (element['final_url'] as MapEntry<String, String>).key;
+          return isApkContainer(
+            name,
+            includeZips: includeZips,
+            includeTarballs: includeTarballs,
+          );
         }).toList();
 
         var filteredApkUrls = filterApks(

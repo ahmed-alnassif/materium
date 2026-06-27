@@ -16,26 +16,21 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:materium/pages/settings.dart';
 import 'package:materium/providers/settings_new.dart';
 import 'package:provider/provider.dart';
-import 'package:screen_corners_ffi/screen_corners_ffi.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:super_editor/super_editor.dart';
-
-// ignore: implementation_imports
-import 'package:material/src/material_shapes/material_shapes.dart'
-    show RoundedPolygonInternalExtension;
-import 'package:super_keyboard/super_keyboard.dart';
 
 import 'package:syntax_highlight/syntax_highlight.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class DeveloperPageBackButton extends StatelessWidget {
-  const DeveloperPageBackButton({super.key, this.style});
-
-  final ButtonStyle? style;
+  const DeveloperPageBackButton({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final developerMode = context.select<SettingsService, bool>(
+      (settings) => settings.developerMode.value,
+    );
+
     final useBlackTheme = context.select<SettingsService, bool>(
       (settings) => settings.useBlackTheme.value,
     );
@@ -49,25 +44,42 @@ class DeveloperPageBackButton extends StatelessWidget {
     final shapeTheme = ShapeTheme.of(context);
     final stateTheme = StateTheme.of(context);
 
-    final fallbackStyle = LegacyThemeFactory.createIconButtonStyle(
-      colorTheme: colorTheme,
-      elevationTheme: elevationTheme,
-      shapeTheme: shapeTheme,
-      stateTheme: stateTheme,
-      color: .standard,
-      containerColor: useBlackTheme
-          ? colorTheme.surfaceContainer
-          : colorTheme.surfaceContainerHighest,
-      iconColor: useBlackTheme
-          ? colorTheme.primary
-          : colorTheme.onSurfaceVariant,
-    );
-
-    return IconButton(
-      style: style?.merge(fallbackStyle) ?? fallbackStyle,
-      onPressed: canPop ? () => Navigator.pop(context) : null,
-      icon: const Icon(Symbols.arrow_back_rounded),
-      tooltip: materialLocalization.backButtonTooltip,
+    return Tooltip(
+      message: materialLocalization.backButtonTooltip,
+      child: IconButton(
+        style: .from(
+          containerColor: .resolveWith(
+            (states) => switch (states) {
+              ButtonDisabledStates() => null,
+              _ =>
+                useBlackTheme
+                    ? colorTheme.surfaceContainer
+                    : colorTheme.surfaceContainerHighest,
+            },
+          ),
+          stateLayerColor: .all(
+            useBlackTheme ? colorTheme.primary : colorTheme.onSurfaceVariant,
+          ),
+          iconTheme: .resolveWith(
+            (states) => switch (states) {
+              ButtonDisabledStates() => null,
+              _ => .from(
+                color: useBlackTheme
+                    ? colorTheme.primary
+                    : colorTheme.onSurfaceVariant,
+              ),
+            },
+          ),
+        ),
+        settings: const .new(
+          size: .small,
+          shape: .round,
+          color: .standard,
+          width: .normal,
+        ),
+        onTap: canPop ? () => Navigator.pop(context) : null,
+        icon: const Icon(Symbols.arrow_back_rounded),
+      ),
     );
   }
 }
@@ -115,7 +127,7 @@ class _DeveloperPageState extends State<DeveloperPage> {
               ),
               title: const Text("Developer Options"),
             ),
-            ListItemTheme.merge(
+            ListItemTheme.mergeWithData(
               data: CustomThemeFactory.createListItemTheme(
                 colorTheme: colorTheme,
                 elevationTheme: elevationTheme,
@@ -164,36 +176,36 @@ class _DeveloperPageState extends State<DeveloperPage> {
                           ),
                         ),
                       ),
-                      ListItemContainer(
-                        child: MergeSemantics(
-                          child: ListItemInteraction(
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (context) =>
-                                    const DeveloperMarkdown2Page(),
-                              ),
-                            ),
-                            child: ListItemLayout(
-                              leading: CustomListItemLeading.fromExtendedColor(
-                                extendedColor: staticColors.cyan,
-                                pairing: defaultPairing,
-                                containerShape: RoundedPolygonBorder(
-                                  polygon: MaterialShapes.slanted,
-                                ),
-                                child: const Icon(
-                                  Symbols.markdown_rounded,
-                                  fill: 1.0,
-                                ),
-                              ),
-                              headline: const Text("Markdown Demo 2"),
-                              supportingText: const Text("Uses super_editor"),
-                              trailing: const Icon(
-                                Symbols.keyboard_arrow_right_rounded,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      // ListItemContainer(
+                      //   child: MergeSemantics(
+                      //     child: ListItemInteraction(
+                      //       onTap: () => Navigator.of(context).push(
+                      //         MaterialPageRoute<void>(
+                      //           builder: (context) =>
+                      //               const DeveloperMarkdown2Page(),
+                      //         ),
+                      //       ),
+                      //       child: ListItemLayout(
+                      //         leading: CustomListItemLeading.fromExtendedColor(
+                      //           extendedColor: staticColors.cyan,
+                      //           pairing: defaultPairing,
+                      //           containerShape: RoundedPolygonBorder(
+                      //             polygon: MaterialShapes.slanted,
+                      //           ),
+                      //           child: const Icon(
+                      //             Symbols.markdown_rounded,
+                      //             fill: 1.0,
+                      //           ),
+                      //         ),
+                      //         headline: const Text("Markdown Demo 2"),
+                      //         supportingText: const Text("Uses super_editor"),
+                      //         trailing: const Icon(
+                      //           Symbols.keyboard_arrow_right_rounded,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       ListItemContainer(
                         child: MergeSemantics(
                           child: ListItemInteraction(
@@ -377,9 +389,9 @@ class _ExperimentsPageState extends State<_ExperimentsPage> {
                     child: ColoredBox(
                       color: colorTheme.errorContainer,
                       child: Align.center(
-                        child: Material(
-                          shape: CornersBorder.rounded(
-                            corners: .all(shapeTheme.corner.full),
+                        child: Surface(
+                          shape: shapeTheme.applyCorner(
+                            corner: shapeTheme.cornerFull,
                           ),
                           color: colorTheme.primaryContainer,
                           child: Padding(
@@ -393,7 +405,7 @@ class _ExperimentsPageState extends State<_ExperimentsPage> {
                                     padding: .symmetric(
                                       // horizontal: 12.0 - 4.0 - 4.0,
                                     ),
-                                    child: IconButton(
+                                    child: IconButtonLegacy(
                                       style:
                                           LegacyThemeFactory.createIconButtonStyle(
                                             colorTheme: colorTheme,
@@ -431,7 +443,7 @@ class _ExperimentsPageState extends State<_ExperimentsPage> {
                                       padding: .directional(
                                         end: 12.0 - 4.0 - 4.0,
                                       ),
-                                      child: IconButton(
+                                      child: IconButtonLegacy(
                                         style:
                                             LegacyThemeFactory.createIconButtonStyle(
                                               colorTheme: colorTheme,
@@ -566,11 +578,11 @@ class _DeveloperMarkdown1PageState extends State<DeveloperMarkdown1Page> {
             subtitle: Text("flutter_markdown_plus"),
             trailing: Padding(
               padding: EdgeInsets.only(right: 8.0 - 4.0),
-              child: IconButton.filledTonal(
+              child: IconButtonLegacy.filledTonal(
                 onPressed: () => _scrollController.animateTo(
                   0.0,
-                  duration: const DurationThemeData.fallback().extraLong4,
-                  curve: const EasingThemeData.fallback().emphasized,
+                  duration: const DurationThemeData.defaults().extraLong4,
+                  curve: const EasingThemeData.defaults().emphasized,
                 ),
                 icon: Icon(
                   Symbols.arrow_upward_rounded,
@@ -626,7 +638,7 @@ class _DeveloperMarkdown1PageState extends State<DeveloperMarkdown1Page> {
                               style: typescaleTheme.bodyMedium
                                   .toTextStyle()
                                   .copyWith(
-                                    fontFamily: FontFamily.firaCode,
+                                    fontFamily: FontFamily.monaspaceArgon,
                                     fontWeight: FontWeight.w400,
                                     fontVariations: const [
                                       FontVariation.weight(400.0),
@@ -660,7 +672,7 @@ class _DeveloperMarkdown1PageState extends State<DeveloperMarkdown1Page> {
                         h3Padding: EdgeInsets.zero,
                         code: const TextStyle(
                           inherit: true,
-                          fontFamily: FontFamily.firaCode,
+                          fontFamily: FontFamily.monaspaceArgon,
                           fontWeight: FontWeight.w500,
                           fontVariations: [FontVariation.weight(500.0)],
                         ),
@@ -721,141 +733,141 @@ class _SyntaxHighlighter implements SyntaxHighlighter {
   int get hashCode => Object.hash(runtimeType, language, theme, style);
 }
 
-class DeveloperMarkdown2Page extends StatefulWidget {
-  const DeveloperMarkdown2Page({super.key});
+// class DeveloperMarkdown2Page extends StatefulWidget {
+//   const DeveloperMarkdown2Page({super.key});
 
-  @override
-  State<DeveloperMarkdown2Page> createState() => _DeveloperMarkdown2PageState();
-}
+//   @override
+//   State<DeveloperMarkdown2Page> createState() => _DeveloperMarkdown2PageState();
+// }
 
-class _DeveloperMarkdown2PageState extends State<DeveloperMarkdown2Page> {
-  late Editor _editor;
+// class _DeveloperMarkdown2PageState extends State<DeveloperMarkdown2Page> {
+//   late Editor _editor;
 
-  @override
-  void initState() {
-    super.initState();
-    _editor = createDefaultDocumentEditor(
-      document: deserializeMarkdownToDocument(_custom),
-      composer: MutableDocumentComposer(),
-    );
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     _editor = createDefaultDocumentEditor(
+//       document: deserializeMarkdownToDocument(_custom),
+//       composer: MutableDocumentComposer(),
+//     );
+//   }
 
-  @override
-  void dispose() {
-    _editor.dispose();
-    super.dispose();
-  }
+//   @override
+//   void dispose() {
+//     _editor.dispose();
+//     super.dispose();
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorTheme = ColorTheme.of(context);
-    final typescaleTheme = TypescaleTheme.of(context);
-    return Scaffold(
-      backgroundColor: colorTheme.surfaceContainer,
-      body: CustomScrollView(
-        slivers: [
-          CustomAppBar(
-            leading: const Padding(
-              padding: EdgeInsets.only(left: 8.0 - 4.0),
-              child: DeveloperPageBackButton(),
-            ),
-            type: CustomAppBarType.largeFlexible,
-            expandedContainerColor: colorTheme.surfaceContainer,
-            collapsedContainerColor: colorTheme.surfaceContainer,
-            collapsedPadding: const EdgeInsets.fromLTRB(
-              8.0 + 40.0 + 8.0,
-              0.0,
-              16.0,
-              0.0,
-            ),
-            title: Text("Markdown"),
-            subtitle: Text("super_editor"),
-          ),
-          SuperReader(
-            editor: _editor,
-            androidHandleColor: colorTheme.primary,
-            selectionStyle: SelectionStyles(
-              selectionColor: colorTheme.primary.withValues(alpha: 0.3),
-            ),
-            componentBuilders: [
-              const BlockquoteComponentBuilder(),
-              const ParagraphComponentBuilder(),
-              const ListItemComponentBuilder(),
-              const ImageComponentBuilder(),
-              const HorizontalRuleComponentBuilder(),
-              const ReadOnlyCheckboxComponentBuilder(),
-              const MarkdownTableComponentBuilder(),
-            ],
-            stylesheet: readOnlyDefaultStylesheet.copyWith(
-              addRulesAfter: [
-                StyleRule(BlockSelector.all, (doc, docNode) {
-                  return {
-                    Styles.maxWidth: 760.0,
-                    Styles.padding: const CascadingPadding.symmetric(
-                      horizontal: 16.0,
-                    ),
-                    Styles.textStyle: typescaleTheme.bodyMedium.toTextStyle(
-                      color: colorTheme.onSurface,
-                    ),
-                  };
-                }),
-                StyleRule(const BlockSelector("header1"), (doc, docNode) {
-                  return {
-                    Styles.padding: const CascadingPadding.only(top: 40),
-                    Styles.textStyle: typescaleTheme.displayMediumEmphasized
-                        .toTextStyle(),
-                  };
-                }),
-                StyleRule(const BlockSelector("header2"), (doc, docNode) {
-                  return {
-                    Styles.padding: const CascadingPadding.only(top: 80),
-                    Styles.textStyle: typescaleTheme.displaySmallEmphasized
-                        .toTextStyle(),
-                  };
-                }),
-                StyleRule(const BlockSelector("header3"), (doc, docNode) {
-                  return {
-                    Styles.padding: const CascadingPadding.only(
-                      top: 56.0,
-                      bottom: 16.0,
-                    ),
-                    Styles.textStyle: typescaleTheme.headlineSmallEmphasized
-                        .toTextStyle(),
-                  };
-                }),
-                StyleRule(const BlockSelector("paragraph"), (doc, docNode) {
-                  return {
-                    Styles.padding: CascadingPadding.only(
-                      top: typescaleTheme.bodyMedium.size,
-                      bottom: typescaleTheme.bodyMedium.size,
-                    ),
-                  };
-                }),
-                StyleRule(const BlockSelector("paragraph").after("header2"), (
-                  doc,
-                  docNode,
-                ) {
-                  return {Styles.padding: CascadingPadding.only(top: 24.0)};
-                }),
-                StyleRule(const BlockSelector("code"), (doc, docNode) {
-                  return {
-                    Styles.borderRadius: BorderRadius.circular(28),
-                    Styles.textStyle: typescaleTheme.bodyMedium
-                        .toTextStyle()
-                        .copyWith(
-                          color: colorTheme.onSurface,
-                          fontFamily: FontFamily.firaCode,
-                        ),
-                  };
-                }),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     final colorTheme = ColorTheme.of(context);
+//     final typescaleTheme = TypescaleTheme.of(context);
+//     return Scaffold(
+//       backgroundColor: colorTheme.surfaceContainer,
+//       body: CustomScrollView(
+//         slivers: [
+//           CustomAppBar(
+//             leading: const Padding(
+//               padding: EdgeInsets.only(left: 8.0 - 4.0),
+//               child: DeveloperPageBackButton(),
+//             ),
+//             type: CustomAppBarType.largeFlexible,
+//             expandedContainerColor: colorTheme.surfaceContainer,
+//             collapsedContainerColor: colorTheme.surfaceContainer,
+//             collapsedPadding: const EdgeInsets.fromLTRB(
+//               8.0 + 40.0 + 8.0,
+//               0.0,
+//               16.0,
+//               0.0,
+//             ),
+//             title: Text("Markdown"),
+//             subtitle: Text("super_editor"),
+//           ),
+//           SuperReader(
+//             editor: _editor,
+//             androidHandleColor: colorTheme.primary,
+//             selectionStyle: SelectionStyles(
+//               selectionColor: colorTheme.primary.withValues(alpha: 0.3),
+//             ),
+//             componentBuilders: [
+//               const BlockquoteComponentBuilder(),
+//               const ParagraphComponentBuilder(),
+//               const ListItemComponentBuilder(),
+//               const ImageComponentBuilder(),
+//               const HorizontalRuleComponentBuilder(),
+//               const ReadOnlyCheckboxComponentBuilder(),
+//               const MarkdownTableComponentBuilder(),
+//             ],
+//             stylesheet: readOnlyDefaultStylesheet.copyWith(
+//               addRulesAfter: [
+//                 StyleRule(BlockSelector.all, (doc, docNode) {
+//                   return {
+//                     Styles.maxWidth: 760.0,
+//                     Styles.padding: const CascadingPadding.symmetric(
+//                       horizontal: 16.0,
+//                     ),
+//                     Styles.textStyle: typescaleTheme.bodyMedium.toTextStyle(
+//                       color: colorTheme.onSurface,
+//                     ),
+//                   };
+//                 }),
+//                 StyleRule(const BlockSelector("header1"), (doc, docNode) {
+//                   return {
+//                     Styles.padding: const CascadingPadding.only(top: 40),
+//                     Styles.textStyle: typescaleTheme.displayMediumEmphasized
+//                         .toTextStyle(),
+//                   };
+//                 }),
+//                 StyleRule(const BlockSelector("header2"), (doc, docNode) {
+//                   return {
+//                     Styles.padding: const CascadingPadding.only(top: 80),
+//                     Styles.textStyle: typescaleTheme.displaySmallEmphasized
+//                         .toTextStyle(),
+//                   };
+//                 }),
+//                 StyleRule(const BlockSelector("header3"), (doc, docNode) {
+//                   return {
+//                     Styles.padding: const CascadingPadding.only(
+//                       top: 56.0,
+//                       bottom: 16.0,
+//                     ),
+//                     Styles.textStyle: typescaleTheme.headlineSmallEmphasized
+//                         .toTextStyle(),
+//                   };
+//                 }),
+//                 StyleRule(const BlockSelector("paragraph"), (doc, docNode) {
+//                   return {
+//                     Styles.padding: CascadingPadding.only(
+//                       top: typescaleTheme.bodyMedium.size,
+//                       bottom: typescaleTheme.bodyMedium.size,
+//                     ),
+//                   };
+//                 }),
+//                 StyleRule(const BlockSelector("paragraph").after("header2"), (
+//                   doc,
+//                   docNode,
+//                 ) {
+//                   return {Styles.padding: CascadingPadding.only(top: 24.0)};
+//                 }),
+//                 StyleRule(const BlockSelector("code"), (doc, docNode) {
+//                   return {
+//                     Styles.borderRadius: BorderRadius.circular(28),
+//                     Styles.textStyle: typescaleTheme.bodyMedium
+//                         .toTextStyle()
+//                         .copyWith(
+//                           color: colorTheme.onSurface,
+//                           fontFamily: FontFamily.monaspaceArgon,
+//                         ),
+//                   };
+//                 }),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 const String _custom = r"""
 - [ ] A
@@ -1256,138 +1268,138 @@ It converts "HTML", but keep intact partial entries like "xxxHTMLyyy" and so on.
 *here be dragons*
 :::""";
 
-class ReadOnlyCheckboxComponentBuilder implements ComponentBuilder {
-  const ReadOnlyCheckboxComponentBuilder();
+// class ReadOnlyCheckboxComponentBuilder implements ComponentBuilder {
+//   const ReadOnlyCheckboxComponentBuilder();
 
-  @override
-  TaskComponentViewModel? createViewModel(
-    Document document,
-    DocumentNode node,
-  ) {
-    if (node is! TaskNode) {
-      return null;
-    }
+//   @override
+//   TaskComponentViewModel? createViewModel(
+//     Document document,
+//     DocumentNode node,
+//   ) {
+//     if (node is! TaskNode) {
+//       return null;
+//     }
 
-    final textDirection = getParagraphDirection(node.text.toPlainText());
+//     final textDirection = getParagraphDirection(node.text.toPlainText());
 
-    return TaskComponentViewModel(
-      nodeId: node.id,
-      createdAt: node.metadata[NodeMetadata.createdAt],
-      padding: EdgeInsets.zero,
-      indent: node.indent,
-      isComplete: node.isComplete,
-      setComplete: null,
-      text: node.text,
-      textDirection: textDirection,
-      textAlignment: textDirection == TextDirection.ltr
-          ? TextAlign.left
-          : TextAlign.right,
-      textStyleBuilder: noStyleBuilder,
-      selectionColor: const Color(0x00000000),
-    );
-  }
+//     return TaskComponentViewModel(
+//       nodeId: node.id,
+//       createdAt: node.metadata[NodeMetadata.createdAt],
+//       padding: EdgeInsets.zero,
+//       indent: node.indent,
+//       isComplete: node.isComplete,
+//       setComplete: null,
+//       text: node.text,
+//       textDirection: textDirection,
+//       textAlignment: textDirection == TextDirection.ltr
+//           ? TextAlign.left
+//           : TextAlign.right,
+//       textStyleBuilder: noStyleBuilder,
+//       selectionColor: const Color(0x00000000),
+//     );
+//   }
 
-  @override
-  Widget? createComponent(
-    SingleColumnDocumentComponentContext componentContext,
-    SingleColumnLayoutComponentViewModel componentViewModel,
-  ) {
-    if (componentViewModel is! TaskComponentViewModel) {
-      return null;
-    }
-    return CheckboxComponent(
-      key: componentContext.componentKey,
-      viewModel: componentViewModel,
-    );
-  }
-}
+//   @override
+//   Widget? createComponent(
+//     SingleColumnDocumentComponentContext componentContext,
+//     SingleColumnLayoutComponentViewModel componentViewModel,
+//   ) {
+//     if (componentViewModel is! TaskComponentViewModel) {
+//       return null;
+//     }
+//     return CheckboxComponent(
+//       key: componentContext.componentKey,
+//       viewModel: componentViewModel,
+//     );
+//   }
+// }
 
-class CheckboxComponent extends StatefulWidget {
-  const CheckboxComponent({
-    super.key,
-    required this.viewModel,
-    this.showDebugPaint = false,
-  });
+// class CheckboxComponent extends StatefulWidget {
+//   const CheckboxComponent({
+//     super.key,
+//     required this.viewModel,
+//     this.showDebugPaint = false,
+//   });
 
-  final TaskComponentViewModel viewModel;
-  final bool showDebugPaint;
+//   final TaskComponentViewModel viewModel;
+//   final bool showDebugPaint;
 
-  @override
-  State<CheckboxComponent> createState() => _CheckboxComponentState();
-}
+//   @override
+//   State<CheckboxComponent> createState() => _CheckboxComponentState();
+// }
 
-class _CheckboxComponentState extends State<CheckboxComponent>
-    with ProxyDocumentComponent<CheckboxComponent>, ProxyTextComposable {
-  final _textKey = GlobalKey();
+// class _CheckboxComponentState extends State<CheckboxComponent>
+//     with ProxyDocumentComponent<CheckboxComponent>, ProxyTextComposable {
+//   final _textKey = GlobalKey();
 
-  @override
-  GlobalKey<State<StatefulWidget>> get childDocumentComponentKey => _textKey;
+//   @override
+//   GlobalKey<State<StatefulWidget>> get childDocumentComponentKey => _textKey;
 
-  @override
-  TextComposable get childTextComposable =>
-      childDocumentComponentKey.currentState as TextComposable;
+//   @override
+//   TextComposable get childTextComposable =>
+//       childDocumentComponentKey.currentState as TextComposable;
 
-  /// Computes the [TextStyle] for this task's inner [TextComponent].
-  TextStyle _computeStyles(Set<Attribution> attributions) {
-    // Show a strikethrough across the entire task if it's complete.
-    final style = widget.viewModel.textStyleBuilder(attributions);
-    return widget.viewModel.isComplete
-        ? style.copyWith(
-            decoration: style.decoration == null
-                ? TextDecoration.lineThrough
-                : TextDecoration.combine([
-                    TextDecoration.lineThrough,
-                    style.decoration!,
-                  ]),
-          )
-        : style;
-  }
+//   /// Computes the [TextStyle] for this task's inner [TextComponent].
+//   TextStyle _computeStyles(Set<Attribution> attributions) {
+//     // Show a strikethrough across the entire task if it's complete.
+//     final style = widget.viewModel.textStyleBuilder(attributions);
+//     return widget.viewModel.isComplete
+//         ? style.copyWith(
+//             decoration: style.decoration == null
+//                 ? TextDecoration.lineThrough
+//                 : TextDecoration.combine([
+//                     TextDecoration.lineThrough,
+//                     style.decoration!,
+//                   ]),
+//           )
+//         : style;
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: widget.viewModel.textDirection,
-      child: Flex.horizontal(
-        crossAxisAlignment: .start,
-        children: [
-          SizedBox(
-            width: widget.viewModel.indentCalculator(
-              widget.viewModel.textStyleBuilder({}),
-              widget.viewModel.indent,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 16, right: 4),
-            child: IgnorePointer(
-              ignoring: widget.viewModel.setComplete == null,
-              child: Checkbox.bistate(
-                checked: widget.viewModel.isComplete,
-                onCheckedChanged: (value) {
-                  widget.viewModel.setComplete?.call(value);
-                },
-              ),
-            ),
-          ),
-          Flexible.tight(
-            child: TextComponent(
-              key: _textKey,
-              text: widget.viewModel.text,
-              textDirection: widget.viewModel.textDirection,
-              textAlign: widget.viewModel.textAlignment,
-              textStyleBuilder: _computeStyles,
-              inlineWidgetBuilders: widget.viewModel.inlineWidgetBuilders,
-              textSelection: widget.viewModel.selection,
-              selectionColor: widget.viewModel.selectionColor,
-              highlightWhenEmpty: widget.viewModel.highlightWhenEmpty,
-              underlines: widget.viewModel.createUnderlines(),
-              showDebugPaint: widget.showDebugPaint,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Directionality(
+//       textDirection: widget.viewModel.textDirection,
+//       child: Flex.horizontal(
+//         crossAxisAlignment: .start,
+//         children: [
+//           SizedBox(
+//             width: widget.viewModel.indentCalculator(
+//               widget.viewModel.textStyleBuilder({}),
+//               widget.viewModel.indent,
+//             ),
+//           ),
+//           Padding(
+//             padding: const EdgeInsets.only(left: 16, right: 4),
+//             child: IgnorePointer(
+//               ignoring: widget.viewModel.setComplete == null,
+//               child: Checkbox.bistate(
+//                 checked: widget.viewModel.isComplete,
+//                 onCheckedChanged: (value) {
+//                   widget.viewModel.setComplete?.call(value);
+//                 },
+//               ),
+//             ),
+//           ),
+//           Flexible.tight(
+//             child: TextComponent(
+//               key: _textKey,
+//               text: widget.viewModel.text,
+//               textDirection: widget.viewModel.textDirection,
+//               textAlign: widget.viewModel.textAlignment,
+//               textStyleBuilder: _computeStyles,
+//               inlineWidgetBuilders: widget.viewModel.inlineWidgetBuilders,
+//               textSelection: widget.viewModel.selection,
+//               selectionColor: widget.viewModel.selectionColor,
+//               highlightWhenEmpty: widget.viewModel.highlightWhenEmpty,
+//               underlines: widget.viewModel.createUnderlines(),
+//               showDebugPaint: widget.showDebugPaint,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 class SettingsAppBar extends StatefulWidget {
   const SettingsAppBar({super.key});
@@ -1434,16 +1446,16 @@ class _SettingsAppBarState extends State<SettingsAppBar> {
       builder: (context, shrinkOffset, overlapsContent) => SizedBox(
         width: double.infinity,
         height: extent,
-        child: Material(
+        child: Surface(
           color: colorTheme.surfaceContainer,
           child: Padding(
             padding: EdgeInsets.only(top: padding.top),
             child: Flex.horizontal(
               children: [
                 const SizedBox(width: 8.0 - 4.0),
-                IconButton(
+                IconButtonLegacy(
                   onPressed: () => Navigator.of(context).pop(),
-                  style: ButtonStyle(
+                  style: ButtonStyleLegacy(
                     elevation: const WidgetStatePropertyAll(0.0),
                     shadowColor: WidgetStateColor.transparent,
                     minimumSize: const WidgetStatePropertyAll(Size.zero),
@@ -1452,9 +1464,7 @@ class _SettingsAppBarState extends State<SettingsAppBar> {
                     padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                     iconSize: const WidgetStatePropertyAll(24.0),
                     shape: WidgetStatePropertyAll(
-                      CornersBorder.rounded(
-                        corners: Corners.all(shapeTheme.corner.full),
-                      ),
+                      shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
                     ),
                     overlayColor: WidgetStateLayerColor(
                       color: WidgetStatePropertyAll(
@@ -1481,11 +1491,11 @@ class _SettingsAppBarState extends State<SettingsAppBar> {
                     key: _containerKey,
                     child: SizedBox(
                       height: 56.0,
-                      child: Material(
+                      child: Surface(
                         clipBehavior: Clip.antiAlias,
                         color: colorTheme.surfaceContainerHighest,
-                        shape: CornersBorder.rounded(
-                          corners: Corners.all(shapeTheme.corner.full),
+                        shape: shapeTheme.applyCorner(
+                          corner: shapeTheme.cornerFull,
                         ),
                         child: InkWell(
                           overlayColor: WidgetStateLayerColor(
@@ -1528,6 +1538,7 @@ class _SettingsAppBarState extends State<SettingsAppBar> {
                 ),
                 const SizedBox(width: 8.0 - 4.0),
                 MenuAnchor(
+                  animated: true,
                   consumeOutsideTap: true,
                   crossAxisUnconstrained: false,
                   menuChildren: [
@@ -1537,7 +1548,7 @@ class _SettingsAppBarState extends State<SettingsAppBar> {
                       child: const Text("Reset settings"),
                     ),
                   ],
-                  builder: (context, controller, child) => IconButton(
+                  builder: (context, controller, child) => IconButtonLegacy(
                     onPressed: () {
                       if (controller.isOpen) {
                         controller.close();
@@ -1545,7 +1556,7 @@ class _SettingsAppBarState extends State<SettingsAppBar> {
                         controller.open();
                       }
                     },
-                    style: ButtonStyle(
+                    style: ButtonStyleLegacy(
                       elevation: const WidgetStatePropertyAll(0.0),
                       shadowColor: WidgetStateColor.transparent,
                       minimumSize: const WidgetStatePropertyAll(Size.zero),
@@ -1554,9 +1565,7 @@ class _SettingsAppBarState extends State<SettingsAppBar> {
                       padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                       iconSize: const WidgetStatePropertyAll(24.0),
                       shape: WidgetStatePropertyAll(
-                        CornersBorder.rounded(
-                          corners: Corners.all(shapeTheme.corner.full),
-                        ),
+                        shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
                       ),
                       overlayColor: WidgetStateLayerColor(
                         color: WidgetStatePropertyAll(
@@ -1614,23 +1623,23 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
 
   CurvedAnimation _linearExitAnimation = CurvedAnimation(
     parent: kAlwaysDismissedAnimation,
-    curve: const EasingThemeData.fallback().linear,
+    curve: const EasingThemeData.defaults().linear,
   );
   CurvedAnimation _linearEnterAnimation = CurvedAnimation(
     parent: kAlwaysDismissedAnimation,
-    curve: const EasingThemeData.fallback().linear,
+    curve: const EasingThemeData.defaults().linear,
   );
   CurvedAnimation _curvedExitAnimation = CurvedAnimation(
     parent: kAlwaysDismissedAnimation,
-    curve: const EasingThemeData.fallback().linear,
+    curve: const EasingThemeData.defaults().linear,
   );
   CurvedAnimation _curvedEnterAnimation = CurvedAnimation(
     parent: kAlwaysDismissedAnimation,
-    curve: const EasingThemeData.fallback().linear,
+    curve: const EasingThemeData.defaults().linear,
   );
   CurvedAnimation _curvedAnimation = CurvedAnimation(
     parent: kAlwaysDismissedAnimation,
-    curve: const EasingThemeData.fallback().linear,
+    curve: const EasingThemeData.defaults().linear,
   );
 
   final Tween<Rect?> _containerRectTween = RectTween();
@@ -1639,7 +1648,7 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
   bool _sharedElementVisible = false;
 
   void _didChangeState({required Animation<double> linearAnimation}) {
-    final easingTheme = const EasingThemeData.fallback();
+    final easingTheme = const EasingThemeData.defaults();
     final linearExitInterval = Interval(0.0, 0.25, curve: easingTheme.linear);
     final linearEnterInterval = Interval(0.25, 0.75, curve: easingTheme.linear);
     final reverseLinearExitInterval = Interval(
@@ -1732,13 +1741,13 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
 
   @override
   Duration get transitionDuration => kDebugMode
-      ? const DurationThemeData.fallback().extraLong4
-      : const DurationThemeData.fallback().long2;
+      ? const DurationThemeData.defaults().extraLong4
+      : const DurationThemeData.defaults().long2;
 
   @override
   Duration get reverseTransitionDuration => kDebugMode
-      ? const DurationThemeData.fallback().extraLong4
-      : const DurationThemeData.fallback().medium2;
+      ? const DurationThemeData.defaults().extraLong4
+      : const DurationThemeData.defaults().medium2;
 
   @override
   set offstage(bool value) {
@@ -1786,7 +1795,8 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
   ) {
     _didChangeState(linearAnimation: animation);
 
-    final screenCorners = ScreenCorners.of(context);
+    final displayCornerRadii =
+        MediaQuery.displayCornerRadiiOf(context) ?? .zero;
 
     final colorTheme = ColorTheme.of(context);
     final elevationTheme = ElevationTheme.of(context);
@@ -1821,8 +1831,10 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
     //   ),
     // ),
 
-    final viewShape = CornersBorder.rounded(
-      corners: animation.isCompleted ? Corners.none : screenCorners.toCorners(),
+    final viewShape = shapeTheme.applyCorners(
+      corners: animation.isCompleted
+          ? .zero
+          : .fromBorderRadius(displayCornerRadii),
     );
 
     return AbsorbPointer(
@@ -1929,14 +1941,14 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
             textRect ??= animation.isDismissed ? beginTextRect : endTextRect;
 
             final shape = ShapeBorder.lerp(
-              CornersBorder.rounded(
-                corners: .all(.circular(beginContainerRect.shortestSide / 2.0)),
+              shapeTheme.applyCorner(
+                corner: .fixed(beginContainerRect.shortestSide / 2.0),
               ),
               viewShape,
               _curvedAnimation.value,
             )!;
 
-            final backIconButton = IconButton(
+            final backIconButton = IconButtonLegacy(
               style: LegacyThemeFactory.createIconButtonStyle(
                 colorTheme: colorTheme,
                 elevationTheme: elevationTheme,
@@ -1949,7 +1961,7 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
               icon: const Icon(Symbols.arrow_back_rounded),
             );
 
-            final clearIconButton = IconButton(
+            final clearIconButton = IconButtonLegacy(
               style: LegacyThemeFactory.createIconButtonStyle(
                 colorTheme: colorTheme,
                 elevationTheme: elevationTheme,
@@ -1967,7 +1979,7 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
                 child: SizedBox(
                   width: containerRect.width,
                   height: containerRect.height,
-                  child: Material(
+                  child: Surface(
                     clipBehavior: .antiAlias,
                     color: containerColor,
                     shape: shape,
@@ -2001,7 +2013,7 @@ class _SettingsAppBarRoute<T extends Object?> extends PopupRoute<T> {
                                         context,
                                         shrinkOffset,
                                         overlapsContent,
-                                      ) => Material(
+                                      ) => Surface(
                                         clipBehavior: Clip.antiAlias,
                                         color: containerColor,
                                         child: SizedBox(
@@ -2229,7 +2241,7 @@ class _Settings2ViewState extends State<Settings2View> {
           //   title: Text("Settings"),
           // ),
           const SettingsAppBar(),
-          ListItemTheme.merge(
+          ListItemTheme.mergeWithData(
             data: const .from(),
             // data: CustomThemeFactory.createListItemTheme(
             //   colorTheme: colorTheme,
@@ -2251,11 +2263,11 @@ class _Settings2ViewState extends State<Settings2View> {
                       child: ListItemLayout(
                         leading: SizedBox.square(
                           dimension: 40.0,
-                          child: Material(
+                          child: Surface(
                             clipBehavior: Clip.antiAlias,
                             color: staticColors.blue.colorFixed,
-                            shape: CornersBorder.rounded(
-                              corners: Corners.all(shapeTheme.corner.full),
+                            shape: shapeTheme.applyCorner(
+                              corner: shapeTheme.cornerFull,
                             ),
                             child: Align.center(
                               child: Icon(
@@ -2284,11 +2296,11 @@ class _Settings2ViewState extends State<Settings2View> {
                       child: ListItemLayout(
                         leading: SizedBox.square(
                           dimension: 40.0,
-                          child: Material(
+                          child: Surface(
                             clipBehavior: Clip.antiAlias,
                             color: staticColors.yellow.colorFixed,
-                            shape: CornersBorder.rounded(
-                              corners: Corners.all(shapeTheme.corner.full),
+                            shape: shapeTheme.applyCorner(
+                              corner: shapeTheme.cornerFull,
                             ),
                             child: Align.center(
                               child: Icon(
@@ -2323,7 +2335,7 @@ class _Settings2ViewState extends State<Settings2View> {
                         child: ListItemLayout(
                           leading: SizedBox.square(
                             dimension: 40.0,
-                            child: Material(
+                            child: Surface(
                               clipBehavior: Clip.antiAlias,
                               color: staticColors.pink.colorFixed,
                               shape: const StadiumBorder(),
@@ -2434,11 +2446,11 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                       child: AnimatedBuilder(
                         animation: _rotationController,
                         builder: (context, child) {
-                          return Material(
+                          return Surface(
                             clipBehavior: Clip.antiAlias,
                             shape: RoundedPolygonBorder(
                               polygon: MaterialShapes.cookie12Sided
-                                  .transformedWithMatrix(_rotationMatrix),
+                                  .transformedWithMatrix4(_rotationMatrix),
                             ),
                             color: colorTheme.surface,
                             child: child!,
@@ -2583,7 +2595,7 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
               ),
               SliverPadding(
                 padding: const .symmetric(horizontal: 8.0),
-                sliver: ListItemTheme.merge(
+                sliver: ListItemTheme.mergeWithData(
                   data:
                       CustomThemeFactory.createListItemTheme(
                         colorTheme: colorTheme,
@@ -2592,7 +2604,7 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                         stateTheme: stateTheme,
                         typescaleTheme: typescaleTheme,
                         color: .settings,
-                      ).copyWith(
+                      ).maybeCopyWith(
                         containerColor: .all(
                           useBlackTheme
                               ? colorTheme.surface
@@ -2775,6 +2787,31 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                           "to see shape morphing in all its beauty.",
                         ),
                       ),
+                      // ListenableBuilder(
+                      //   listenable: _enabled,
+                      //   builder: (context, _) => Align.center(
+                      //     child: ButtonContainer(
+                      //       style: Button.defaultStyleFrom(
+                      //         colorTheme: colorTheme,
+                      //         elevationTheme: elevationTheme,
+                      //         shapeTheme: shapeTheme,
+                      //         stateTheme: stateTheme,
+                      //         typescaleTheme: typescaleTheme,
+                      //       ),
+                      //       settings: const ButtonSettings(
+                      //         size: .extraLarge,
+                      //         shape: .round,
+                      //         color: .tonal,
+                      //       ),
+                      //       isSelected: _enabled.value,
+                      //       onTap: () => _enabled.value = !_enabled.value,
+                      //       child: ButtonContent(
+                      //         icon: const Icon(Symbols.star_rounded),
+                      //         label: const Text("Favorite"),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
                           16.0,
@@ -2870,9 +2907,9 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                     _enabled,
                                     _selected,
                                   ]),
-                                  builder: (context, _) => Material(
-                                    shape: CornersBorder.rounded(
-                                      corners: .all(shapeTheme.corner.full),
+                                  builder: (context, _) => Surface(
+                                    shape: shapeTheme.applyCorner(
+                                      corner: shapeTheme.cornerFull,
                                     ),
                                     color: colorTheme.surface,
                                     child: Flex.horizontal(
@@ -2946,14 +2983,14 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                 constraints: const BoxConstraints(
                                   maxHeight: 160.0,
                                 ),
-                                child: CheckboxTheme.merge(
+                                child: CheckboxTheme.mergeWithData(
                                   data: CustomThemeFactory.createCheckboxTheme(
                                     colorTheme: colorTheme,
                                     shapeTheme: shapeTheme,
                                     stateTheme: stateTheme,
                                     color: .listItemPhone,
                                   ),
-                                  child: RadioButtonTheme.merge(
+                                  child: RadioButtonTheme.mergeWithData(
                                     data:
                                         CustomThemeFactory.createRadioButtonTheme(
                                           colorTheme: colorTheme,
@@ -2961,7 +2998,7 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                           stateTheme: stateTheme,
                                           color: .listItemPhone,
                                         ),
-                                    child: SwitchTheme.merge(
+                                    child: SwitchTheme.mergeWithData(
                                       data:
                                           CustomThemeFactory.createSwitchTheme(
                                             colorTheme: colorTheme,
@@ -2974,15 +3011,12 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                           _enabled,
                                           _selected,
                                         ]),
-                                        builder: (context, _) => Material(
-                                          shape: CornersBorder.rounded(
-                                            corners: .all(
-                                              _selected.value
-                                                  ? shapeTheme
-                                                        .corner
-                                                        .largeIncreased
-                                                  : shapeTheme.corner.full,
-                                            ),
+                                        builder: (context, _) => Surface(
+                                          shape: shapeTheme.applyCorner(
+                                            corner: _selected.value
+                                                ? shapeTheme
+                                                      .cornerLargeIncreased
+                                                : shapeTheme.cornerFull,
                                           ),
                                           color:
                                               _selected.value && _enabled.value
@@ -3069,14 +3103,14 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                 constraints: const BoxConstraints(
                                   maxHeight: 160.0,
                                 ),
-                                child: CheckboxTheme.merge(
+                                child: CheckboxTheme.mergeWithData(
                                   data: CustomThemeFactory.createCheckboxTheme(
                                     colorTheme: colorTheme,
                                     shapeTheme: shapeTheme,
                                     stateTheme: stateTheme,
                                     color: .listItemWatch,
                                   ),
-                                  child: RadioButtonTheme.merge(
+                                  child: RadioButtonTheme.mergeWithData(
                                     data:
                                         CustomThemeFactory.createRadioButtonTheme(
                                           colorTheme: colorTheme,
@@ -3084,7 +3118,7 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                           stateTheme: stateTheme,
                                           color: .listItemWatch,
                                         ),
-                                    child: SwitchTheme.merge(
+                                    child: SwitchTheme.mergeWithData(
                                       data:
                                           CustomThemeFactory.createSwitchTheme(
                                             colorTheme: colorTheme,
@@ -3097,11 +3131,9 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                           _enabled,
                                           _selected,
                                         ]),
-                                        builder: (context, _) => Material(
-                                          shape: CornersBorder.rounded(
-                                            corners: .all(
-                                              shapeTheme.corner.full,
-                                            ),
+                                        builder: (context, _) => Surface(
+                                          shape: shapeTheme.applyCorner(
+                                            corner: shapeTheme.cornerFull,
                                           ),
                                           color:
                                               _selected.value && _enabled.value
@@ -3188,14 +3220,14 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                 constraints: const BoxConstraints(
                                   maxHeight: 160.0,
                                 ),
-                                child: CheckboxTheme.merge(
+                                child: CheckboxTheme.mergeWithData(
                                   data: CustomThemeFactory.createCheckboxTheme(
                                     colorTheme: colorTheme,
                                     shapeTheme: shapeTheme,
                                     stateTheme: stateTheme,
                                     color: .black,
                                   ),
-                                  child: RadioButtonTheme.merge(
+                                  child: RadioButtonTheme.mergeWithData(
                                     data:
                                         CustomThemeFactory.createRadioButtonTheme(
                                           colorTheme: colorTheme,
@@ -3203,7 +3235,7 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                           stateTheme: stateTheme,
                                           color: .black,
                                         ),
-                                    child: SwitchTheme.merge(
+                                    child: SwitchTheme.mergeWithData(
                                       data:
                                           CustomThemeFactory.createSwitchTheme(
                                             colorTheme: colorTheme,
@@ -3217,11 +3249,9 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                           _enabled,
                                           _selected,
                                         ]),
-                                        builder: (context, _) => Material(
-                                          shape: CornersBorder.rounded(
-                                            corners: .all(
-                                              shapeTheme.corner.full,
-                                            ),
+                                        builder: (context, _) => Surface(
+                                          shape: shapeTheme.applyCorner(
+                                            corner: shapeTheme.cornerFull,
                                           ),
                                           color:
                                               _selected.value && _enabled.value
@@ -3307,9 +3337,9 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                               child: SizedBox(
                                 width: .infinity,
                                 height: 64.0,
-                                child: SpringTheme(
-                                  data: const .standard(),
-                                  child: SwitchTheme.merge(
+                                child: SpringTheme.replaceWithData(
+                                  data: const .defaultsExpressive(),
+                                  child: SwitchTheme.mergeWithData(
                                     data: CustomThemeFactory.createSwitchTheme(
                                       colorTheme: colorTheme,
                                       shapeTheme: shapeTheme,
@@ -3322,10 +3352,10 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                                         _enabled,
                                         _selected,
                                       ]),
-                                      builder: (context, _) => Material(
+                                      builder: (context, _) => Surface(
                                         clipBehavior: .antiAlias,
-                                        shape: const CornersBorder.rounded(
-                                          corners: .all(.circular(24.0)),
+                                        shape: shapeTheme.applyCornerValue(
+                                          cornerValue: 24.0,
                                         ),
                                         color: _selected.value && _enabled.value
                                             ? colorTheme.primaryContainer
@@ -3633,9 +3663,7 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                         isFirst: true,
                         isLast: true,
                         containerShape: .all(
-                          CornersBorder.rounded(
-                            corners: .all(shapeTheme.corner.full),
-                          ),
+                          shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
                         ),
                         containerColor: .all(colorTheme.primaryContainer),
                         child: MergeSemantics(
@@ -3677,17 +3705,17 @@ class _MaterialDemoViewState extends State<_MaterialDemoView> {
                       // Builder(
                       //   builder: (context) {
                       //     final startCorners = Corners.horizontal(
-                      //       left: shapeTheme.corner.full,
-                      //       right: shapeTheme.corner.extraSmall,
+                      //       left: shapeTheme.cornerFull,
+                      //       right: shapeTheme.cornerExtraSmall,
                       //     );
                       //     return Flex.horizontal(
                       //       spacing: 2.0,
                       //       children: [
                       //         SizedBox(
                       //           height: 40.0,
-                      //           child: Material(
+                      //           child: Surface(
                       //             clipBehavior: .antiAlias,
-                      //             shape: CornersBorder.rounded(
+                      //             shape: shapeTheme.applyCorners(
                       //               corners: startCorners,
                       //             ),
                       //             color: colorTheme.secondaryContainer,
@@ -3858,11 +3886,9 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
     final searchBar = SizedBox(
       width: double.infinity,
       height: 56.0,
-      child: Material(
+      child: Surface(
         clipBehavior: Clip.antiAlias,
-        shape: CornersBorder.rounded(
-          corners: Corners.all(shapeTheme.corner.full),
-        ),
+        shape: shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
         color: colorTheme.surfaceBright,
         child: InkWell(
           onTap: () => _focusNode.requestFocus(),
@@ -3913,8 +3939,8 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
                 ),
               ),
               if (_controller.text.isNotEmpty)
-                IconButton(
-                  style: ButtonStyle(
+                IconButtonLegacy(
+                  style: ButtonStyleLegacy(
                     elevation: const WidgetStatePropertyAll(0.0),
                     shadowColor: WidgetStateColor.transparent,
                     minimumSize: const WidgetStatePropertyAll(Size.zero),
@@ -3923,9 +3949,7 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
                     padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                     iconSize: const WidgetStatePropertyAll(24.0),
                     shape: WidgetStatePropertyAll(
-                      CornersBorder.rounded(
-                        corners: Corners.all(shapeTheme.corner.full),
-                      ),
+                      shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
                     ),
                     overlayColor: WidgetStateLayerColor(
                       color: WidgetStatePropertyAll(
@@ -3981,12 +4005,10 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
               minExtent: 4.0 + 56.0 + 16.0,
               maxExtent: 4.0 + 56.0 + 16.0,
               pinned: true,
-              builder: (context, shrinkOffset, overlapsContent) => Material(
+              builder: (context, shrinkOffset, overlapsContent) => Surface(
                 clipBehavior: Clip.none,
                 color: colorTheme.surfaceContainer,
-                shape: CornersBorder.rounded(
-                  corners: Corners.all(shapeTheme.corner.none),
-                ),
+                shape: shapeTheme.applyCorner(corner: shapeTheme.cornerNone),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 16.0),
                   child: LayoutBuilder(
@@ -4013,11 +4035,9 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-                child: Material(
+                child: Surface(
                   clipBehavior: Clip.antiAlias,
-                  shape: CornersBorder.rounded(
-                    corners: Corners.all(shapeTheme.corner.full),
-                  ),
+                  shape: shapeTheme.applyCorner(corner: shapeTheme.cornerFull),
                   color: colorTheme.surfaceContainerLow,
                   child: InkWell(
                     onTap: () => _controller.clear(),
@@ -4026,14 +4046,14 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
                       opacity: stateTheme.asWidgetStateLayerOpacity,
                     ),
                     child: AnimatedAlign(
-                      duration: const DurationThemeData.fallback().medium4,
-                      curve: const EasingThemeData.fallback().standard,
+                      duration: const DurationThemeData.defaults().medium4,
+                      curve: const EasingThemeData.defaults().standard,
                       alignment: Alignment.center,
                       widthFactor: 1.0,
                       heightFactor: _filteredShapesEntries.isEmpty ? 1.0 : 0.0,
                       child: AnimatedOpacity(
-                        duration: const DurationThemeData.fallback().medium4,
-                        curve: const EasingThemeData.fallback().standard,
+                        duration: const DurationThemeData.defaults().medium4,
+                        curve: const EasingThemeData.defaults().standard,
                         opacity: _filteredShapesEntries.isEmpty ? 1.0 : 0.0,
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(
@@ -4083,8 +4103,8 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
                 tween: Tween<double>(
                   end: _filteredShapesEntries.isNotEmpty ? 1.0 : 0.0,
                 ),
-                duration: const DurationThemeData.fallback().medium4,
-                curve: const EasingThemeData.fallback().standard,
+                duration: const DurationThemeData.defaults().medium4,
+                curve: const EasingThemeData.defaults().standard,
                 builder: (context, value, child) => SliverOpacity(
                   opacity: value,
                   sliver: SliverTransform.scale(
@@ -4110,7 +4130,7 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
                       children: [
                         AspectRatio(
                           aspectRatio: 1.0,
-                          child: Material(
+                          child: Surface(
                             clipBehavior: Clip.antiAlias,
                             shape: shape,
                             color: colorTheme.primary,
@@ -4157,7 +4177,7 @@ class _ShapeLibraryViewState extends State<_ShapeLibraryView> {
                                       children: [
                                         AspectRatio(
                                           aspectRatio: 1.0,
-                                          child: Material(
+                                          child: Surface(
                                             clipBehavior: Clip.antiAlias,
                                             shape: shape,
                                             color: colorTheme.primary,
